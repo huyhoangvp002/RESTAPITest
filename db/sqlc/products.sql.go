@@ -46,24 +46,6 @@ func (q *Queries) DeleteProduct(ctx context.Context, id int32) error {
 }
 
 const getProduct = `-- name: GetProduct :one
-SELECT id, name, price, category_id, created_at FROM products
-WHERE id = $1
-`
-
-func (q *Queries) GetProduct(ctx context.Context, id int32) (Product, error) {
-	row := q.db.QueryRowContext(ctx, getProduct, id)
-	var i Product
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Price,
-		&i.CategoryID,
-		&i.CreatedAt,
-	)
-	return i, err
-}
-
-const getProductWithCategory = `-- name: GetProductWithCategory :one
 SELECT
   p.id,
   p.name,
@@ -79,7 +61,7 @@ WHERE
   p.id = $1
 `
 
-type GetProductWithCategoryRow struct {
+type GetProductRow struct {
 	ID           int32         `json:"id"`
 	Name         string        `json:"name"`
 	Price        int32         `json:"price"`
@@ -88,9 +70,9 @@ type GetProductWithCategoryRow struct {
 	CreatedAt    time.Time     `json:"created_at"`
 }
 
-func (q *Queries) GetProductWithCategory(ctx context.Context, id int32) (GetProductWithCategoryRow, error) {
-	row := q.db.QueryRowContext(ctx, getProductWithCategory, id)
-	var i GetProductWithCategoryRow
+func (q *Queries) GetProduct(ctx context.Context, id int32) (GetProductRow, error) {
+	row := q.db.QueryRowContext(ctx, getProduct, id)
+	var i GetProductRow
 	err := row.Scan(
 		&i.ID,
 		&i.Name,

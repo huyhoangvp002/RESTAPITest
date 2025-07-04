@@ -14,8 +14,7 @@ type Querier interface {
 	DeleteCategory(ctx context.Context, id int32) error
 	DeleteProduct(ctx context.Context, id int32) error
 	GetCategory(ctx context.Context, id int32) (Category, error)
-	GetProduct(ctx context.Context, id int32) (Product, error)
-	GetProductWithCategory(ctx context.Context, id int32) (GetProductWithCategoryRow, error)
+	GetProduct(ctx context.Context, id int32) (GetProductRow, error)
 	ListCategories(ctx context.Context) ([]Category, error)
 	ListProducts(ctx context.Context) ([]Product, error)
 	UpdateCategory(ctx context.Context, arg UpdateCategoryParams) (Category, error)
