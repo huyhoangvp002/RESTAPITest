@@ -15,5 +15,8 @@ sqlc:
 
 mock:
 	mockgen -package=mockdb github.com/huyhoangvp002/RESTAPITest/db/sqlc  Store  > db/mock/store.go
+	
+run:
+	go run main.go
 
-.PHONY: postgres createdb dropdb migrateup migratedown sqlc mock
+.PHONY: postgres createdb dropdb migrateup migratedown sqlc mock run

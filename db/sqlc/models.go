@@ -10,17 +10,19 @@ import (
 )
 
 type Category struct {
-	ID        int32     `json:"id"`
+	ID        int64     `json:"id"`
 	Name      string    `json:"name"`
 	Type      string    `json:"type"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
 type Product struct {
-	ID   int32  `json:"id"`
+	ID   int64  `json:"id"`
 	Name string `json:"name"`
 	// CHECK (price > 0)
 	Price      int32         `json:"price"`
 	CategoryID sql.NullInt32 `json:"category_id"`
-	CreatedAt  time.Time     `json:"created_at"`
+	// CHECK (price >= 0)
+	Value     int32     `json:"value"`
+	CreatedAt time.Time `json:"created_at"`
 }

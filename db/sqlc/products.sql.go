@@ -8,29 +8,35 @@ package db
 import (
 	"context"
 	"database/sql"
-	"time"
 )
 
 const createProduct = `-- name: CreateProduct :one
-INSERT INTO products (name, price, category_id)
-VALUES ($1, $2, $3)
-RETURNING id, name, price, category_id, created_at
+INSERT INTO products (name, price, category_id, value)
+VALUES ($1, $2, $3, $4)
+RETURNING id, name, price, category_id, value, created_at
 `
 
 type CreateProductParams struct {
 	Name       string        `json:"name"`
 	Price      int32         `json:"price"`
 	CategoryID sql.NullInt32 `json:"category_id"`
+	Value      int32         `json:"value"`
 }
 
 func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (Product, error) {
-	row := q.db.QueryRowContext(ctx, createProduct, arg.Name, arg.Price, arg.CategoryID)
+	row := q.db.QueryRowContext(ctx, createProduct,
+		arg.Name,
+		arg.Price,
+		arg.CategoryID,
+		arg.Value,
+	)
 	var i Product
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
 		&i.Price,
 		&i.CategoryID,
+		&i.Value,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -40,7 +46,7 @@ const deleteProduct = `-- name: DeleteProduct :exec
 DELETE FROM products WHERE id = $1
 `
 
-func (q *Queries) DeleteProduct(ctx context.Context, id int32) error {
+func (q *Queries) DeleteProduct(ctx context.Context, id int64) error {
 	_, err := q.db.ExecContext(ctx, deleteProduct, id)
 	return err
 }
@@ -50,9 +56,9 @@ SELECT
   p.id,
   p.name,
   p.price,
-  p.category_id,
   c.name AS category_name,
-  p.created_at
+  c.type AS category_type,
+  p.value
 FROM
   products AS p
 JOIN
@@ -62,30 +68,30 @@ WHERE
 `
 
 type GetProductRow struct {
-	ID           int32         `json:"id"`
-	Name         string        `json:"name"`
-	Price        int32         `json:"price"`
-	CategoryID   sql.NullInt32 `json:"category_id"`
-	CategoryName string        `json:"category_name"`
-	CreatedAt    time.Time     `json:"created_at"`
+	ID           int64  `json:"id"`
+	Name         string `json:"name"`
+	Price        int32  `json:"price"`
+	CategoryName string `json:"category_name"`
+	CategoryType string `json:"category_type"`
+	Value        int32  `json:"value"`
 }
 
-func (q *Queries) GetProduct(ctx context.Context, id int32) (GetProductRow, error) {
+func (q *Queries) GetProduct(ctx context.Context, id int64) (GetProductRow, error) {
 	row := q.db.QueryRowContext(ctx, getProduct, id)
 	var i GetProductRow
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
 		&i.Price,
-		&i.CategoryID,
 		&i.CategoryName,
-		&i.CreatedAt,
+		&i.CategoryType,
+		&i.Value,
 	)
 	return i, err
 }
 
 const listProducts = `-- name: ListProducts :many
-SELECT id, name, price, category_id, created_at FROM products
+SELECT id, name, price, category_id, value, created_at FROM products
 ORDER BY id
 `
 
@@ -103,6 +109,52 @@ func (q *Queries) ListProducts(ctx context.Context) ([]Product, error) {
 			&i.Name,
 			&i.Price,
 			&i.CategoryID,
+			&i.Value,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listProductsByCategoryID = `-- name: ListProductsByCategoryID :many
+SELECT
+  p.id,
+  p.name,
+  p.price,
+  p.category_id,
+  p.value,
+  p.created_at
+FROM
+  products AS p
+WHERE
+  p.category_id = $1
+ORDER BY p.id
+`
+
+func (q *Queries) ListProductsByCategoryID(ctx context.Context, categoryID sql.NullInt32) ([]Product, error) {
+	rows, err := q.db.QueryContext(ctx, listProductsByCategoryID, categoryID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Product{}
+	for rows.Next() {
+		var i Product
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Price,
+			&i.CategoryID,
+			&i.Value,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -120,16 +172,17 @@ func (q *Queries) ListProducts(ctx context.Context) ([]Product, error) {
 
 const updateProduct = `-- name: UpdateProduct :one
 UPDATE products
-SET name = $2, price = $3, category_id = $4
+SET name = $2, price = $3, category_id = $4, value = $5
 WHERE id = $1
-RETURNING id, name, price, category_id, created_at
+RETURNING id, name, price, category_id, value, created_at
 `
 
 type UpdateProductParams struct {
-	ID         int32         `json:"id"`
+	ID         int64         `json:"id"`
 	Name       string        `json:"name"`
 	Price      int32         `json:"price"`
 	CategoryID sql.NullInt32 `json:"category_id"`
+	Value      int32         `json:"value"`
 }
 
 func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) (Product, error) {
@@ -138,6 +191,7 @@ func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) (P
 		arg.Name,
 		arg.Price,
 		arg.CategoryID,
+		arg.Value,
 	)
 	var i Product
 	err := row.Scan(
@@ -145,6 +199,7 @@ func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) (P
 		&i.Name,
 		&i.Price,
 		&i.CategoryID,
+		&i.Value,
 		&i.CreatedAt,
 	)
 	return i, err

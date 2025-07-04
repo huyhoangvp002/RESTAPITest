@@ -6,17 +6,20 @@ package db
 
 import (
 	"context"
+	"database/sql"
 )
 
 type Querier interface {
 	CreateCategory(ctx context.Context, arg CreateCategoryParams) (Category, error)
 	CreateProduct(ctx context.Context, arg CreateProductParams) (Product, error)
-	DeleteCategory(ctx context.Context, id int32) error
-	DeleteProduct(ctx context.Context, id int32) error
-	GetCategory(ctx context.Context, id int32) (Category, error)
-	GetProduct(ctx context.Context, id int32) (GetProductRow, error)
+	DeleteCategory(ctx context.Context, id int64) error
+	DeleteProduct(ctx context.Context, id int64) error
+	GetCategory(ctx context.Context, id int64) (Category, error)
+	GetCategoryIDByName(ctx context.Context, name string) (int64, error)
+	GetProduct(ctx context.Context, id int64) (GetProductRow, error)
 	ListCategories(ctx context.Context) ([]Category, error)
 	ListProducts(ctx context.Context) ([]Product, error)
+	ListProductsByCategoryID(ctx context.Context, categoryID sql.NullInt32) ([]Product, error)
 	UpdateCategory(ctx context.Context, arg UpdateCategoryParams) (Category, error)
 	UpdateProduct(ctx context.Context, arg UpdateProductParams) (Product, error)
 }

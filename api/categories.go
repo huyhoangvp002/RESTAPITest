@@ -8,16 +8,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type createCategoryRespond struct {
+type createCategoryReq struct {
 	Name string `json:"name"`
 	Type string `json:"type"`
 }
 
 func (server *Server) createCategory(ctx *gin.Context) {
-	var req createCategoryRespond
+	var req createCategoryReq
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		log.Println("JSON bind err")
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": "error"})
+		return
 	}
 	arg := db.CreateCategoryParams{
 		Name: req.Name,
@@ -27,6 +28,7 @@ func (server *Server) createCategory(ctx *gin.Context) {
 	cate, err := server.store.CreateCategory(ctx, arg)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": "error"})
+		return
 	}
 	ctx.JSON(http.StatusOK, cate)
 }

@@ -36,7 +36,7 @@ const deleteCategory = `-- name: DeleteCategory :exec
 DELETE FROM categories WHERE id = $1
 `
 
-func (q *Queries) DeleteCategory(ctx context.Context, id int32) error {
+func (q *Queries) DeleteCategory(ctx context.Context, id int64) error {
 	_, err := q.db.ExecContext(ctx, deleteCategory, id)
 	return err
 }
@@ -46,7 +46,7 @@ SELECT id, name, type, created_at FROM categories
 WHERE id = $1
 `
 
-func (q *Queries) GetCategory(ctx context.Context, id int32) (Category, error) {
+func (q *Queries) GetCategory(ctx context.Context, id int64) (Category, error) {
 	row := q.db.QueryRowContext(ctx, getCategory, id)
 	var i Category
 	err := row.Scan(
@@ -56,6 +56,17 @@ func (q *Queries) GetCategory(ctx context.Context, id int32) (Category, error) {
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const getCategoryIDByName = `-- name: GetCategoryIDByName :one
+SELECT id FROM categories WHERE name = $1
+`
+
+func (q *Queries) GetCategoryIDByName(ctx context.Context, name string) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getCategoryIDByName, name)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
 }
 
 const listCategories = `-- name: ListCategories :many
@@ -99,7 +110,7 @@ RETURNING id, name, type, created_at
 `
 
 type UpdateCategoryParams struct {
-	ID   int32  `json:"id"`
+	ID   int64  `json:"id"`
 	Name string `json:"name"`
 	Type string `json:"type"`
 }

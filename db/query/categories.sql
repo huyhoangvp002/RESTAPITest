@@ -19,3 +19,6 @@ RETURNING id, name, type, created_at;
 
 -- name: DeleteCategory :exec
 DELETE FROM categories WHERE id = $1;
+
+-- name: GetCategoryIDByName :one
+SELECT id FROM categories WHERE name = $1;

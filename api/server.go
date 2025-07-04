@@ -25,6 +25,12 @@ func NewServer(store db.Querier) *Server {
 	})
 
 	// Category routes
+	router.POST("/categories", server.createCategory)
+	router.POST("/products", server.CreateProduct)
+
+	router.GET("/products/:id", server.GetProduct)
+
+	// router.GET("/products", server.getProductByCateRequest)
 
 	server.router = router
 	return server
