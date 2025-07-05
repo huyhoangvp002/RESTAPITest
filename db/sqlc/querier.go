@@ -10,22 +10,28 @@ import (
 )
 
 type Querier interface {
+	CreateAccount(ctx context.Context, arg CreateAccountParams) (CreateAccountRow, error)
 	CreateCategory(ctx context.Context, arg CreateCategoryParams) (Category, error)
 	CreateDiscount(ctx context.Context, arg CreateDiscountParams) (Discount, error)
 	CreateProduct(ctx context.Context, arg CreateProductParams) (Product, error)
+	DeleteAccount(ctx context.Context, id int64) error
 	DeleteCategory(ctx context.Context, id int64) error
 	DeleteDiscount(ctx context.Context, id int64) error
 	DeleteProduct(ctx context.Context, id int64) error
+	GetAccountByID(ctx context.Context, id int64) (GetAccountByIDRow, error)
+	GetAccountByUsername(ctx context.Context, username string) (GetAccountByUsernameRow, error)
 	GetCategory(ctx context.Context, id int64) (Category, error)
 	GetCategoryIDByName(ctx context.Context, name string) (int64, error)
 	GetDiscount(ctx context.Context, id int64) (Discount, error)
 	GetPriceByID(ctx context.Context, id int64) (int32, error)
 	GetProduct(ctx context.Context, id int64) (GetProductRow, error)
+	ListAccounts(ctx context.Context, arg ListAccountsParams) ([]ListAccountsRow, error)
 	ListCategories(ctx context.Context) ([]Category, error)
 	ListDiscounts(ctx context.Context) ([]Discount, error)
 	ListProducts(ctx context.Context) ([]Product, error)
 	ListProductsByCategoryID(ctx context.Context, categoryID sql.NullInt32) ([]ListProductsByCategoryIDRow, error)
 	ListProductsByMaxPrice(ctx context.Context, discountPrice int32) ([]ListProductsByMaxPriceRow, error)
+	UpdateAccount(ctx context.Context, arg UpdateAccountParams) (UpdateAccountRow, error)
 	UpdateCategory(ctx context.Context, arg UpdateCategoryParams) (Category, error)
 	UpdateDiscount(ctx context.Context, arg UpdateDiscountParams) (Discount, error)
 	UpdateDiscountPrice(ctx context.Context, arg UpdateDiscountPriceParams) error
