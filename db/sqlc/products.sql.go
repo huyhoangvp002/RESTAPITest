@@ -110,27 +110,55 @@ func (q *Queries) GetProduct(ctx context.Context, id int64) (GetProductRow, erro
 }
 
 const listProducts = `-- name: ListProducts :many
-SELECT id, name, price,discount_price, category_id, value, created_at FROM products
-ORDER BY id
+SELECT
+  p.id,
+  p.name,
+  p.price,
+  p.discount_price,
+  c.name AS category_name,
+  c.type AS category_type,
+  p.value
+FROM
+  products AS p
+JOIN
+  categories AS c ON p.category_id = c.id
+ORDER BY p.id
+LIMIT $1
+OFFSET $2
 `
 
-func (q *Queries) ListProducts(ctx context.Context) ([]Product, error) {
-	rows, err := q.db.QueryContext(ctx, listProducts)
+type ListProductsParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+type ListProductsRow struct {
+	ID            int64  `json:"id"`
+	Name          string `json:"name"`
+	Price         int32  `json:"price"`
+	DiscountPrice int32  `json:"discount_price"`
+	CategoryName  string `json:"category_name"`
+	CategoryType  string `json:"category_type"`
+	Value         int32  `json:"value"`
+}
+
+func (q *Queries) ListProducts(ctx context.Context, arg ListProductsParams) ([]ListProductsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listProducts, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Product{}
+	items := []ListProductsRow{}
 	for rows.Next() {
-		var i Product
+		var i ListProductsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
 			&i.Price,
 			&i.DiscountPrice,
-			&i.CategoryID,
+			&i.CategoryName,
+			&i.CategoryType,
 			&i.Value,
-			&i.CreatedAt,
 		); err != nil {
 			return nil, err
 		}

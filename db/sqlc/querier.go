@@ -28,7 +28,7 @@ type Querier interface {
 	ListAccounts(ctx context.Context, arg ListAccountsParams) ([]ListAccountsRow, error)
 	ListCategories(ctx context.Context) ([]Category, error)
 	ListDiscounts(ctx context.Context) ([]Discount, error)
-	ListProducts(ctx context.Context) ([]Product, error)
+	ListProducts(ctx context.Context, arg ListProductsParams) ([]ListProductsRow, error)
 	ListProductsByCategoryID(ctx context.Context, categoryID sql.NullInt32) ([]ListProductsByCategoryIDRow, error)
 	ListProductsByMaxPrice(ctx context.Context, discountPrice int32) ([]ListProductsByMaxPriceRow, error)
 	UpdateAccount(ctx context.Context, arg UpdateAccountParams) (UpdateAccountRow, error)

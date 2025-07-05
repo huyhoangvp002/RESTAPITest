@@ -63,13 +63,12 @@ func (q *Queries) GetAccountByID(ctx context.Context, id int64) (GetAccountByIDR
 }
 
 const getAccountByUsername = `-- name: GetAccountByUsername :one
-SELECT id, username, hash_password
+SELECT username, hash_password
 FROM accounts
 WHERE username = $1
 `
 
 type GetAccountByUsernameRow struct {
-	ID           int64  `json:"id"`
 	Username     string `json:"username"`
 	HashPassword string `json:"hash_password"`
 }
@@ -77,7 +76,7 @@ type GetAccountByUsernameRow struct {
 func (q *Queries) GetAccountByUsername(ctx context.Context, username string) (GetAccountByUsernameRow, error) {
 	row := q.db.QueryRowContext(ctx, getAccountByUsername, username)
 	var i GetAccountByUsernameRow
-	err := row.Scan(&i.ID, &i.Username, &i.HashPassword)
+	err := row.Scan(&i.Username, &i.HashPassword)
 	return i, err
 }
 
