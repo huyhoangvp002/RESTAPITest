@@ -16,12 +16,21 @@ type Category struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+type Discount struct {
+	ID int64 `json:"id"`
+	// 0<value<100
+	DiscountValue int32         `json:"discount_value"`
+	ProductID     sql.NullInt32 `json:"product_id"`
+}
+
 type Product struct {
 	ID   int64  `json:"id"`
 	Name string `json:"name"`
 	// CHECK (price > 0)
-	Price      int32         `json:"price"`
-	CategoryID sql.NullInt32 `json:"category_id"`
+	Price int32 `json:"price"`
+	// CHECK (0 < discount_price <= price)
+	DiscountPrice int32         `json:"discount_price"`
+	CategoryID    sql.NullInt32 `json:"category_id"`
 	// CHECK (price >= 0)
 	Value     int32     `json:"value"`
 	CreatedAt time.Time `json:"created_at"`
