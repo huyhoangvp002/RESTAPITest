@@ -25,10 +25,11 @@ func (server *Server) CreateProduct(ctx *gin.Context) {
 	}
 
 	arg := db.CreateProductParams{
-		Name:       req.Name,
-		Price:      req.Price,
-		CategoryID: sql.NullInt32{Int32: req.CategoryID, Valid: true},
-		Value:      req.Value,
+		Name:          req.Name,
+		Price:         req.Price,
+		DiscountPrice: req.Price,
+		CategoryID:    sql.NullInt32{Int32: req.CategoryID, Valid: true},
+		Value:         req.Value,
 	}
 	product, err := server.store.CreateProduct(ctx, arg)
 	if err != nil {
@@ -52,7 +53,7 @@ func (server *Server) GetProduct(ctx *gin.Context) {
 	product, err := server.store.GetProduct(ctx, req.ID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, gin.H{"error": "product not found"})
+			ctx.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 			return
 		}
 
@@ -63,25 +64,87 @@ func (server *Server) GetProduct(ctx *gin.Context) {
 }
 
 type getProductByCateRequest struct {
-	ID int32 `uri:"id" binding:"required,min=1"`
+	CategoryName string `form:"name" binding:"required"`
 }
 
-func (server *Server) getProductByCateRequest(ctx *gin.Context) {
+func (server *Server) GetProductByCate(ctx *gin.Context) {
 	var req getProductByCateRequest
-	if err := ctx.ShouldBindUri(&req); err != nil {
+	if err := ctx.ShouldBindQuery(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"Error": err.Error()})
 		return
 	}
 
-	product, err := server.store.ListProductsByCategoryID(ctx, sql.NullInt32{Int32: req.ID, Valid: true})
+	cateID, err := server.store.GetCategoryIDByName(ctx, req.CategoryName)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, gin.H{"error": "product not found"})
+			ctx.JSON(http.StatusNotFound, gin.H{"error": "Category not found"})
 			return
 		}
+		ctx.JSON(http.StatusInternalServerError, gin.H{"Error": err.Error()})
+		return
+	}
+
+	categoryID := sql.NullInt32{
+		Int32: int32(cateID),
+		Valid: true,
+	}
+	products, err := server.store.ListProductsByCategoryID(ctx, categoryID)
+	if err != nil {
 
 		ctx.JSON(http.StatusInternalServerError, gin.H{"Error": err.Error()})
 		return
 	}
+	ctx.JSON(http.StatusOK, products)
+
+}
+
+type updateProductRequest struct {
+	ID    int64 `json:"id" binding:"required"`
+	Price int32 `json:"price" binding:"required,min=1"`
+	Value int32 `json:"value" binding:"required,min=0"`
+}
+
+func (server *Server) UdateProduct(ctx *gin.Context) {
+	var req updateProductRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"Error": err.Error()})
+		return
+	}
+
+	arg := db.UpdateProductParams{
+		ID:    req.ID,
+		Price: req.Price,
+		Value: req.Value,
+	}
+	product, err := server.store.UpdateProduct(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
 	ctx.JSON(http.StatusOK, product)
+
+}
+
+type listByMaxPriceRequest struct {
+	Price int32 `form:"price" binding:"required,min=1"`
+}
+
+func (server *Server) ListByMaxPrice(ctx *gin.Context) {
+	var req listByMaxPriceRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	product, err := server.store.ListProductsByMaxPrice(ctx, req.Price)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	ctx.JSON(http.StatusOK, product)
+
 }

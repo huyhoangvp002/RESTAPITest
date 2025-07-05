@@ -19,4 +19,7 @@ mock:
 run:
 	go run main.go
 
-.PHONY: postgres createdb dropdb migrateup migratedown sqlc mock run
+db:
+	export DB_SOURCE="postgresql://root:secret@localhost:5432/Test_shop?sslmode=disable"
+
+.PHONY: postgres createdb dropdb migrateup migratedown sqlc mock run db
