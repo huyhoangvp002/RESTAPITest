@@ -35,6 +35,7 @@ func NewServer(store db.Querier) *Server {
 	router.GET("/products/categories", server.GetProductByCate)
 	router.GET("/products", server.ListByMaxPrice)
 	router.GET("/accounts", server.GetAccountByUsername)
+	router.GET("/products/all", server.ListProducts)
 
 	router.PATCH("/products", server.UdateProduct)
 	// router.GET("/products", server.getProductByCateRequest)

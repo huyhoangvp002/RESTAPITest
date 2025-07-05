@@ -20,8 +20,23 @@ WHERE
   p.id = $1;
 
 -- name: ListProducts :many
-SELECT id, name, price,discount_price, category_id, value, created_at FROM products
-ORDER BY id;
+SELECT
+  p.id,
+  p.name,
+  p.price,
+  p.discount_price,
+  c.name AS category_name,
+  c.type AS category_type,
+  p.value
+FROM
+  products AS p
+JOIN
+  categories AS c ON p.category_id = c.id
+ORDER BY p.id
+LIMIT $1
+OFFSET $2;
+
+
 
 -- name: UpdateProduct :one
 UPDATE products
