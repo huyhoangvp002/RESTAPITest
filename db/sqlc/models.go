@@ -9,6 +9,13 @@ import (
 	"time"
 )
 
+type Account struct {
+	ID           int64  `json:"id"`
+	Username     string `json:"username"`
+	HashPassword string `json:"hash_password"`
+	Role         string `json:"role"`
+}
+
 type Category struct {
 	ID        int64     `json:"id"`
 	Name      string    `json:"name"`

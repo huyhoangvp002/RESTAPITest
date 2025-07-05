@@ -21,6 +21,13 @@ CREATE TABLE "discounts" (
   "product_id" int
 );
 
+CREATE TABLE "accounts" (
+  "id" bigserial PRIMARY KEY,
+  "username" varchar UNIQUE NOT NULL,
+  "hash_password" varchar NOT NULL,
+  "role" varchar NOT NULL
+);
+
 COMMENT ON COLUMN "products"."price" IS 'CHECK (price > 0)';
 
 COMMENT ON COLUMN "products"."discount_price" IS 'CHECK (0 < discount_price <= price)';
