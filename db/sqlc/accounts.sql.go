@@ -83,13 +83,15 @@ func (q *Queries) GetAccountByUsername(ctx context.Context, username string) (Ge
 const listAccounts = `-- name: ListAccounts :many
 SELECT id, username, role
 FROM accounts
-ORDER BY id
-LIMIT $1 OFFSET $2
+WHERE username =$1
+ORDER BY id 
+LIMIT $2 OFFSET $3
 `
 
 type ListAccountsParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
+	Username string `json:"username"`
+	Limit    int32  `json:"limit"`
+	Offset   int32  `json:"offset"`
 }
 
 type ListAccountsRow struct {
@@ -99,7 +101,7 @@ type ListAccountsRow struct {
 }
 
 func (q *Queries) ListAccounts(ctx context.Context, arg ListAccountsParams) ([]ListAccountsRow, error) {
-	rows, err := q.db.QueryContext(ctx, listAccounts, arg.Limit, arg.Offset)
+	rows, err := q.db.QueryContext(ctx, listAccounts, arg.Username, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
