@@ -16,8 +16,9 @@ WHERE username = $1;
 -- name: ListAccounts :many
 SELECT id, username, role
 FROM accounts
-ORDER BY id
-LIMIT $1 OFFSET $2;
+WHERE username =$1
+ORDER BY id 
+LIMIT $2 OFFSET $3;
 
 -- name: UpdateAccount :one
 UPDATE accounts
