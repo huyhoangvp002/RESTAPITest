@@ -25,11 +25,11 @@ type Category struct {
 }
 
 type Customer struct {
-	ID         int64         `json:"id"`
-	Name       string        `json:"name"`
-	AccountsID sql.NullInt32 `json:"accounts_id"`
-	Email      string        `json:"email"`
-	CreatedAt  time.Time     `json:"created_at"`
+	ID        int64         `json:"id"`
+	Name      string        `json:"name"`
+	AccountID sql.NullInt32 `json:"account_id"`
+	Email     string        `json:"email"`
+	CreatedAt time.Time     `json:"created_at"`
 }
 
 type Discount struct {
@@ -38,6 +38,7 @@ type Discount struct {
 	DiscountValue int32         `json:"discount_value"`
 	ProductID     sql.NullInt32 `json:"product_id"`
 	CreatedAt     time.Time     `json:"created_at"`
+	CustomerID    sql.NullInt32 `json:"customer_id"`
 }
 
 type Product struct {

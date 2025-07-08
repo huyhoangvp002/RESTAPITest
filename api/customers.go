@@ -38,9 +38,9 @@ func (server *Server) CreateCustomer(ctx *gin.Context) {
 		Valid: true,
 	}
 	arg := db.CreateCustomerParams{
-		Name:       req.Name,
-		AccountsID: CID,
-		Email:      req.Email,
+		Name:      req.Name,
+		AccountID: CID,
+		Email:     req.Email,
 	}
 
 	customer, err := server.store.CreateCustomer(ctx, arg)

@@ -2,6 +2,7 @@ package api
 
 import (
 	db "RESTAPITest/db/sqlc"
+	"RESTAPITest/token"
 	"database/sql"
 	"net/http"
 
@@ -10,7 +11,7 @@ import (
 
 type createDiscountRequest struct {
 	DiscountValue int32 `json:"discount_value" binding:"required,min=0,max=100"`
-	ProductID     int   `json:"product_id"`
+	ProductID     int64 `json:"product_id"`
 }
 
 func (server *Server) CreateDiscount(ctx *gin.Context) {
@@ -20,14 +21,44 @@ func (server *Server) CreateDiscount(ctx *gin.Context) {
 		return
 	}
 
-	PID := sql.NullInt32{
-		Int32: int32(req.ProductID),
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+
+	customerIDRaw, err := server.store.GetCustomerIDByUsername(ctx, authPayload.Username)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	customerID := sql.NullInt32{
+		Int32: int32(customerIDRaw),
 		Valid: true,
 	}
+
+	productIDRaw, err := server.store.GetProdIDByCusID(ctx, customerID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	if productIDRaw != req.ProductID {
+		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "permission denied: you do not own this product"})
+	}
+	productID := sql.NullInt32{
+		Int32: int32(productIDRaw),
+		Valid: true,
+	}
+
 	arg := db.CreateDiscountParams{
 		DiscountValue: req.DiscountValue,
-		ProductID:     PID,
+		ProductID:     productID,
 	}
+
 	discount, err := server.store.CreateDiscount(ctx, arg)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -37,9 +68,13 @@ func (server *Server) CreateDiscount(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	price, err := server.store.GetPriceByID(ctx, int64(req.ProductID))
+	price, err := server.store.GetPriceByID(ctx, productIDRaw)
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, errorResponse(err))
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 	discount_price := db.UpdateDiscountPriceParams{

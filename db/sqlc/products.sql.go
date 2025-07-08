@@ -74,6 +74,22 @@ func (q *Queries) GetPriceByID(ctx context.Context, id int64) (int32, error) {
 	return price, err
 }
 
+const getProdIDByCusID = `-- name: GetProdIDByCusID :one
+SELECT
+  p.id
+FROM
+  products AS p
+WHERE
+  p.customers_id = $1
+`
+
+func (q *Queries) GetProdIDByCusID(ctx context.Context, customersID sql.NullInt32) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getProdIDByCusID, customersID)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
 const getProduct = `-- name: GetProduct :one
 SELECT
   p.id,
