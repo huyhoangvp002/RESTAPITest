@@ -2,6 +2,7 @@ package api
 
 import (
 	db "RESTAPITest/db/sqlc"
+	"RESTAPITest/token"
 	"RESTAPITest/util"
 	"database/sql"
 	"net/http"
@@ -132,7 +133,22 @@ func (server *Server) ListAccounts(ctx *gin.Context) {
 		Offset: (req.PageID - 1) * req.PageSize,
 	}
 
-	account, err := server.store.ListAccounts(ctx, arg)
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	if authPayload.Role == "admin" {
+
+		account, err := server.store.ListAccounts(ctx, arg)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				ctx.JSON(http.StatusNotFound, errorResponse(err))
+				return
+			}
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusOK, account)
+		return
+	}
+	account, err := server.store.GetAccountByUsername(ctx, authPayload.Username)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
@@ -142,4 +158,5 @@ func (server *Server) ListAccounts(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, account)
+
 }
