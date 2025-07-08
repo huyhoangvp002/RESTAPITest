@@ -1,0 +1,5 @@
+DROP TABLE IF EXISTS categories;
+DROP TABLE IF EXISTS products;
+DROP TABLE IF EXISTS discounts;
+DROP TABLE IF EXISTS accounts;
+DROP TABLE IF EXISTS customers;
