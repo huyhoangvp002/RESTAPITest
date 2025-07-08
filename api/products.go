@@ -2,6 +2,9 @@ package api
 
 import (
 	db "RESTAPITest/db/sqlc"
+	"fmt"
+
+	"RESTAPITest/token"
 	"database/sql"
 	"net/http"
 
@@ -24,10 +27,28 @@ func (server *Server) CreateProduct(ctx *gin.Context) {
 		return
 	}
 
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+
+	id, err := server.store.GetIDByUserName(ctx, authPayload.Username)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	CID := sql.NullInt32{
+		Int32: int32(id),
+		Valid: true,
+	}
+
 	arg := db.CreateProductParams{
 		Name:          req.Name,
 		Price:         req.Price,
 		DiscountPrice: req.Price,
+		CustomersID:   CID,
 		CategoryID:    sql.NullInt32{Int32: req.CategoryID, Valid: true},
 		Value:         req.Value,
 	}
@@ -65,6 +86,8 @@ func (server *Server) GetProduct(ctx *gin.Context) {
 
 type getProductByCateRequest struct {
 	CategoryName string `form:"name" binding:"required"`
+	PageID       int32  `form:"page_id" binding:"required,min=1"`
+	PageSize     int32  `form:"page_size" binding:"required,min=5,max=10"`
 }
 
 func (server *Server) GetProductByCate(ctx *gin.Context) {
@@ -88,7 +111,14 @@ func (server *Server) GetProductByCate(ctx *gin.Context) {
 		Int32: int32(cateID),
 		Valid: true,
 	}
-	products, err := server.store.ListProductsByCategoryID(ctx, categoryID)
+
+	arg := db.ListProductsByCategoryIDParams{
+		CategoryID: categoryID,
+		Offset:     req.PageSize,
+		Limit:      (req.PageID - 1) * req.PageSize,
+	}
+
+	products, err := server.store.ListProductsByCategoryID(ctx, arg)
 	if err != nil {
 
 		ctx.JSON(http.StatusInternalServerError, gin.H{"Error": err.Error()})
@@ -167,6 +197,53 @@ func (server *Server) ListProducts(ctx *gin.Context) {
 	}
 
 	product, err := server.store.ListProducts(ctx, arg)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	ctx.JSON(http.StatusOK, product)
+}
+
+type listProductsByCustomerIDRequest struct {
+	PageID   int32 `form:"page_id" binding:"required,min=1"`
+	PageSize int32 `form:"page_size" binding:"required,min=5,max=10"`
+}
+
+func (server *Server) ListProductByCustomerID(ctx *gin.Context) {
+	var req listProductsByCustomerIDRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+
+	cusID, err := server.store.GetCustomerIDByUsername(ctx, authPayload.Username)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	fmt.Println("[DEBUG]|Customer ID :", cusID)
+	customerID := sql.NullInt32{
+		Int32: int32(cusID),
+		Valid: true,
+	}
+
+	arg := db.ListProductByCustomerIDParams{
+		CustomersID: customerID,
+		Limit:       req.PageSize,
+		Offset:      (req.PageID - 1) * req.PageSize,
+	}
+
+	product, err := server.store.ListProductByCustomerID(ctx, arg)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))

@@ -46,9 +46,8 @@ LIMIT $1 OFFSET $2;
 UPDATE products
 SET
   price = $2,
-  value = $3,
-WHERE
-  id = $1
+  value = $3
+WHERE id = $1
 RETURNING id, name, price, discount_price, value, customers_id, category_id, created_at;
 
 -- name: DeleteProduct :exec
@@ -67,7 +66,8 @@ FROM
   products AS p
 WHERE
   p.category_id = $1
-ORDER BY p.id;
+ORDER BY p.id
+LIMIT $2 OFFSET $3;
 
 -- name: ListProductsByMaxPrice :many
 SELECT
@@ -85,6 +85,7 @@ JOIN
   categories AS c ON p.category_id = c.id
 WHERE
   p.discount_price < $1
+  
 ORDER BY p.discount_price ASC;
 
 -- name: UpdateDiscountPrice :exec
@@ -98,3 +99,19 @@ WHERE
 SELECT price
 FROM products
 WHERE id = $1;
+
+-- name: ListProductByCustomerID :many
+SELECT
+  p.id,
+  p.name,
+  p.price,
+  p.discount_price,
+  p.value,
+  p.customers_id,
+  p.created_at
+FROM
+  products AS p
+WHERE
+  p.customers_id = $1
+ORDER BY p.id
+LIMIT $2 OFFSET $3;

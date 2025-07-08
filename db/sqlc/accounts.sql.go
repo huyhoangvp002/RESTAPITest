@@ -81,6 +81,17 @@ func (q *Queries) GetAccountByUsername(ctx context.Context, username string) (Ge
 	return i, err
 }
 
+const getIDByUserName = `-- name: GetIDByUserName :one
+SELECT id FROM accounts WHERE username =$1
+`
+
+func (q *Queries) GetIDByUserName(ctx context.Context, username string) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getIDByUserName, username)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
 const listAccounts = `-- name: ListAccounts :many
 SELECT id, username, role
 FROM accounts
