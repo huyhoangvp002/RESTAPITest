@@ -1,7 +1,7 @@
 -- name: CreateCustomer :one
 INSERT INTO customers (
     name,
-    accounts_id,
+    account_id,
     email
 ) VALUES (
     $1, $2, $3
@@ -30,11 +30,7 @@ DELETE FROM customers
 WHERE id = $1;
 
 -- name: GetCustomerIDByUsername :one
-SELECT
-  cu.id
-FROM
-  customers AS cu
-JOIN
-  accounts AS ac ON cu.accounts_id = ac.id
-WHERE
-  ac.username = $1;
+SELECT c.id
+FROM customers AS c
+JOIN accounts AS a ON c.account_id = a.id
+WHERE a.username = $1;

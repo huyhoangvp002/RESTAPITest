@@ -6,6 +6,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 )
 
 type Querier interface {
@@ -28,11 +29,14 @@ type Querier interface {
 	GetDiscount(ctx context.Context, id int64) (GetDiscountRow, error)
 	GetIDByUserName(ctx context.Context, username string) (int64, error)
 	GetPriceByID(ctx context.Context, id int64) (int32, error)
+	GetProdIDByCusID(ctx context.Context, customersID sql.NullInt32) (int64, error)
 	GetProduct(ctx context.Context, id int64) (GetProductRow, error)
+	GetProductIDByCustomerID(ctx context.Context, customerID sql.NullInt32) (sql.NullInt32, error)
 	ListAccounts(ctx context.Context, arg ListAccountsParams) ([]ListAccountsRow, error)
 	ListCategories(ctx context.Context) ([]Category, error)
 	ListCustomers(ctx context.Context, arg ListCustomersParams) ([]Customer, error)
 	ListDiscounts(ctx context.Context) ([]ListDiscountsRow, error)
+	ListDiscountsByCustomerID(ctx context.Context, customerID sql.NullInt32) ([]ListDiscountsByCustomerIDRow, error)
 	ListProductByCustomerID(ctx context.Context, arg ListProductByCustomerIDParams) ([]ListProductByCustomerIDRow, error)
 	ListProducts(ctx context.Context, arg ListProductsParams) ([]ListProductsRow, error)
 	ListProductsByCategoryID(ctx context.Context, arg ListProductsByCategoryIDParams) ([]ListProductsByCategoryIDRow, error)

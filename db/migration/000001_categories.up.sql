@@ -20,7 +20,8 @@ CREATE TABLE "discounts" (
   "id" bigserial PRIMARY KEY,
   "discount_value" int NOT NULL,
   "product_id" int,
-  "created_at" timestamptz NOT NULL DEFAULT 'now()'
+  "created_at" timestamptz NOT NULL DEFAULT 'now()',
+  "customer_id" int
 );
 
 CREATE TABLE "accounts" (
@@ -34,7 +35,7 @@ CREATE TABLE "accounts" (
 CREATE TABLE "customers" (
   "id" bigserial PRIMARY KEY,
   "name" varchar NOT NULL,
-  "accounts_id" int,
+  "account_id" int,
   "email" varchar UNIQUE NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT 'now()'
 );
@@ -53,4 +54,6 @@ ALTER TABLE "products" ADD FOREIGN KEY ("customers_id") REFERENCES "customers" (
 
 ALTER TABLE "discounts" ADD FOREIGN KEY ("product_id") REFERENCES "products" ("id");
 
-ALTER TABLE "customers" ADD FOREIGN KEY ("accounts_id") REFERENCES "accounts" ("id");
+ALTER TABLE "discounts" ADD FOREIGN KEY ("customer_id") REFERENCES "customers" ("id");
+
+ALTER TABLE "customers" ADD FOREIGN KEY ("account_id") REFERENCES "accounts" ("id");

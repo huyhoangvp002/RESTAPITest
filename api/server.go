@@ -46,7 +46,7 @@ func (server *Server) setUpRouter() {
 
 	authRoutes.POST("/categories", roleMiddleware("admin"), server.createCategory)
 	authRoutes.POST("/products", server.CreateProduct)
-	authRoutes.POST("/discount", server.CreateDiscount)
+	authRoutes.POST("/discount", roleMiddleware("admin", "customer"), server.CreateDiscount)
 	authRoutes.POST("/createCustomer", server.CreateCustomer)
 
 	authRoutes.GET("/products/:id", server.GetProduct)

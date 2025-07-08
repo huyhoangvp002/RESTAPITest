@@ -115,3 +115,11 @@ WHERE
   p.customers_id = $1
 ORDER BY p.id
 LIMIT $2 OFFSET $3;
+
+-- name: GetProdIDByCusID :one
+SELECT
+  p.id
+FROM
+  products AS p
+WHERE
+  p.customers_id = $1;

@@ -13,27 +13,27 @@ import (
 const createCustomer = `-- name: CreateCustomer :one
 INSERT INTO customers (
     name,
-    accounts_id,
+    account_id,
     email
 ) VALUES (
     $1, $2, $3
 )
-RETURNING id, name, accounts_id, email, created_at
+RETURNING id, name, account_id, email, created_at
 `
 
 type CreateCustomerParams struct {
-	Name       string        `json:"name"`
-	AccountsID sql.NullInt32 `json:"accounts_id"`
-	Email      string        `json:"email"`
+	Name      string        `json:"name"`
+	AccountID sql.NullInt32 `json:"account_id"`
+	Email     string        `json:"email"`
 }
 
 func (q *Queries) CreateCustomer(ctx context.Context, arg CreateCustomerParams) (Customer, error) {
-	row := q.db.QueryRowContext(ctx, createCustomer, arg.Name, arg.AccountsID, arg.Email)
+	row := q.db.QueryRowContext(ctx, createCustomer, arg.Name, arg.AccountID, arg.Email)
 	var i Customer
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
-		&i.AccountsID,
+		&i.AccountID,
 		&i.Email,
 		&i.CreatedAt,
 	)
@@ -51,7 +51,7 @@ func (q *Queries) DeleteCustomer(ctx context.Context, id int64) error {
 }
 
 const getCustomer = `-- name: GetCustomer :one
-SELECT id, name, accounts_id, email, created_at FROM customers
+SELECT id, name, account_id, email, created_at FROM customers
 WHERE id = $1
 `
 
@@ -61,7 +61,7 @@ func (q *Queries) GetCustomer(ctx context.Context, id int64) (Customer, error) {
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
-		&i.AccountsID,
+		&i.AccountID,
 		&i.Email,
 		&i.CreatedAt,
 	)
@@ -69,14 +69,10 @@ func (q *Queries) GetCustomer(ctx context.Context, id int64) (Customer, error) {
 }
 
 const getCustomerIDByUsername = `-- name: GetCustomerIDByUsername :one
-SELECT
-  cu.id
-FROM
-  customers AS cu
-JOIN
-  accounts AS ac ON cu.accounts_id = ac.id
-WHERE
-  ac.username = $1
+SELECT c.id
+FROM customers AS c
+JOIN accounts AS a ON c.account_id = a.id
+WHERE a.username = $1
 `
 
 func (q *Queries) GetCustomerIDByUsername(ctx context.Context, username string) (int64, error) {
@@ -87,7 +83,7 @@ func (q *Queries) GetCustomerIDByUsername(ctx context.Context, username string) 
 }
 
 const listCustomers = `-- name: ListCustomers :many
-SELECT id, name, accounts_id, email, created_at FROM customers
+SELECT id, name, account_id, email, created_at FROM customers
 ORDER BY id
 LIMIT $1 OFFSET $2
 `
@@ -109,7 +105,7 @@ func (q *Queries) ListCustomers(ctx context.Context, arg ListCustomersParams) ([
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
-			&i.AccountsID,
+			&i.AccountID,
 			&i.Email,
 			&i.CreatedAt,
 		); err != nil {
@@ -132,7 +128,7 @@ SET
     name = $2,
     email = $3
 WHERE id = $1
-RETURNING id, name, accounts_id, email, created_at
+RETURNING id, name, account_id, email, created_at
 `
 
 type UpdateCustomerParams struct {
@@ -147,7 +143,7 @@ func (q *Queries) UpdateCustomer(ctx context.Context, arg UpdateCustomerParams) 
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
-		&i.AccountsID,
+		&i.AccountID,
 		&i.Email,
 		&i.CreatedAt,
 	)
