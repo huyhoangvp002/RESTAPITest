@@ -40,13 +40,14 @@ func (server *Server) setUpRouter() {
 
 	router := gin.Default()
 	router.POST("/login", server.Login)
+	router.POST("/signup", server.CreateAccount)
 
 	authRoutes := router.Group("/").Use(authMiddleware(server.tokenMaker))
 
-	authRoutes.POST("/categories", server.createCategory)
+	authRoutes.POST("/categories", roleMiddleware("admin"), server.createCategory)
 	authRoutes.POST("/products", server.CreateProduct)
 	authRoutes.POST("/discount", server.CreateDiscount)
-	router.POST("/signup", server.CreateAccount)
+	authRoutes.POST("/createCustomer", server.CreateCustomer)
 
 	authRoutes.GET("/products/:id", server.GetProduct)
 	authRoutes.GET("/products/categories", server.GetProductByCate)
@@ -54,6 +55,7 @@ func (server *Server) setUpRouter() {
 	authRoutes.GET("/accounts", server.GetAccountByUsername)
 	authRoutes.GET("/products/all", server.ListProducts)
 	authRoutes.GET("/listaccounts", roleMiddleware("admin"), server.ListAccounts)
+	authRoutes.GET("/listproductbycustomerID", roleMiddleware("customer", "admin"), server.ListProductByCustomerID)
 
 	authRoutes.PATCH("/products", server.UdateProduct)
 	// router.GET("/products", server.getProductByCateRequest)

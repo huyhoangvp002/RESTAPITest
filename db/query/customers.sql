@@ -28,3 +28,13 @@ RETURNING *;
 -- name: DeleteCustomer :exec
 DELETE FROM customers
 WHERE id = $1;
+
+-- name: GetCustomerIDByUsername :one
+SELECT
+  cu.id
+FROM
+  customers AS cu
+JOIN
+  accounts AS ac ON cu.accounts_id = ac.id
+WHERE
+  ac.username = $1;

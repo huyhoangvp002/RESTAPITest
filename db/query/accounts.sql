@@ -30,3 +30,6 @@ RETURNING id, username, role;
 -- name: DeleteAccount :exec
 DELETE FROM accounts WHERE id = $1;
 
+
+-- name: GetIDByUserName :one
+SELECT id FROM accounts WHERE username =$1;

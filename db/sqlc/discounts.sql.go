@@ -25,9 +25,15 @@ type CreateDiscountParams struct {
 	ProductID     sql.NullInt32 `json:"product_id"`
 }
 
-func (q *Queries) CreateDiscount(ctx context.Context, arg CreateDiscountParams) (Discount, error) {
+type CreateDiscountRow struct {
+	ID            int64         `json:"id"`
+	DiscountValue int32         `json:"discount_value"`
+	ProductID     sql.NullInt32 `json:"product_id"`
+}
+
+func (q *Queries) CreateDiscount(ctx context.Context, arg CreateDiscountParams) (CreateDiscountRow, error) {
 	row := q.db.QueryRowContext(ctx, createDiscount, arg.DiscountValue, arg.ProductID)
-	var i Discount
+	var i CreateDiscountRow
 	err := row.Scan(&i.ID, &i.DiscountValue, &i.ProductID)
 	return i, err
 }
@@ -53,9 +59,15 @@ WHERE
   id = $1
 `
 
-func (q *Queries) GetDiscount(ctx context.Context, id int64) (Discount, error) {
+type GetDiscountRow struct {
+	ID            int64         `json:"id"`
+	DiscountValue int32         `json:"discount_value"`
+	ProductID     sql.NullInt32 `json:"product_id"`
+}
+
+func (q *Queries) GetDiscount(ctx context.Context, id int64) (GetDiscountRow, error) {
 	row := q.db.QueryRowContext(ctx, getDiscount, id)
-	var i Discount
+	var i GetDiscountRow
 	err := row.Scan(&i.ID, &i.DiscountValue, &i.ProductID)
 	return i, err
 }
@@ -71,15 +83,21 @@ ORDER BY
   id
 `
 
-func (q *Queries) ListDiscounts(ctx context.Context) ([]Discount, error) {
+type ListDiscountsRow struct {
+	ID            int64         `json:"id"`
+	DiscountValue int32         `json:"discount_value"`
+	ProductID     sql.NullInt32 `json:"product_id"`
+}
+
+func (q *Queries) ListDiscounts(ctx context.Context) ([]ListDiscountsRow, error) {
 	rows, err := q.db.QueryContext(ctx, listDiscounts)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Discount{}
+	items := []ListDiscountsRow{}
 	for rows.Next() {
-		var i Discount
+		var i ListDiscountsRow
 		if err := rows.Scan(&i.ID, &i.DiscountValue, &i.ProductID); err != nil {
 			return nil, err
 		}
@@ -110,9 +128,15 @@ type UpdateDiscountParams struct {
 	ProductID     sql.NullInt32 `json:"product_id"`
 }
 
-func (q *Queries) UpdateDiscount(ctx context.Context, arg UpdateDiscountParams) (Discount, error) {
+type UpdateDiscountRow struct {
+	ID            int64         `json:"id"`
+	DiscountValue int32         `json:"discount_value"`
+	ProductID     sql.NullInt32 `json:"product_id"`
+}
+
+func (q *Queries) UpdateDiscount(ctx context.Context, arg UpdateDiscountParams) (UpdateDiscountRow, error) {
 	row := q.db.QueryRowContext(ctx, updateDiscount, arg.ID, arg.DiscountValue, arg.ProductID)
-	var i Discount
+	var i UpdateDiscountRow
 	err := row.Scan(&i.ID, &i.DiscountValue, &i.ProductID)
 	return i, err
 }

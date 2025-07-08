@@ -10,10 +10,11 @@ import (
 )
 
 type Account struct {
-	ID           int64  `json:"id"`
-	Username     string `json:"username"`
-	HashPassword string `json:"hash_password"`
-	Role         string `json:"role"`
+	ID           int64     `json:"id"`
+	Username     string    `json:"username"`
+	HashPassword string    `json:"hash_password"`
+	Role         string    `json:"role"`
+	CreatedAt    time.Time `json:"created_at"`
 }
 
 type Category struct {
@@ -23,11 +24,20 @@ type Category struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+type Customer struct {
+	ID         int64         `json:"id"`
+	Name       string        `json:"name"`
+	AccountsID sql.NullInt32 `json:"accounts_id"`
+	Email      string        `json:"email"`
+	CreatedAt  time.Time     `json:"created_at"`
+}
+
 type Discount struct {
 	ID int64 `json:"id"`
 	// 0<value<100
 	DiscountValue int32         `json:"discount_value"`
 	ProductID     sql.NullInt32 `json:"product_id"`
+	CreatedAt     time.Time     `json:"created_at"`
 }
 
 type Product struct {
@@ -39,6 +49,7 @@ type Product struct {
 	DiscountPrice int32         `json:"discount_price"`
 	CategoryID    sql.NullInt32 `json:"category_id"`
 	// CHECK (price >= 0)
-	Value     int32     `json:"value"`
-	CreatedAt time.Time `json:"created_at"`
+	Value       int32         `json:"value"`
+	CustomersID sql.NullInt32 `json:"customers_id"`
+	CreatedAt   time.Time     `json:"created_at"`
 }
