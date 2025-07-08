@@ -33,3 +33,5 @@ DELETE FROM accounts WHERE id = $1;
 
 -- name: GetIDByUserName :one
 SELECT id FROM accounts WHERE username =$1;
+
+-- name: GetCustimer
