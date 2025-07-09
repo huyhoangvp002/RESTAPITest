@@ -36,7 +36,7 @@ type Querier interface {
 	GetProductIDByAccountID(ctx context.Context, accountID sql.NullInt32) (sql.NullInt32, error)
 	ListAccountInfos(ctx context.Context, arg ListAccountInfosParams) ([]AccountInfo, error)
 	ListAccounts(ctx context.Context, arg ListAccountsParams) ([]ListAccountsRow, error)
-	ListCarts(ctx context.Context, arg ListCartsParams) ([]Cart, error)
+	ListCartByAccountID(ctx context.Context, arg ListCartByAccountIDParams) ([]ListCartByAccountIDRow, error)
 	ListCategories(ctx context.Context) ([]Category, error)
 	ListDiscounts(ctx context.Context) ([]Discount, error)
 	ListDiscountsByAccountID(ctx context.Context, accountID sql.NullInt32) ([]Discount, error)
