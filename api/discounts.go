@@ -4,6 +4,7 @@ import (
 	db "RESTAPITest/db/sqlc"
 	"RESTAPITest/token"
 	"database/sql"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -23,7 +24,8 @@ func (server *Server) CreateDiscount(ctx *gin.Context) {
 
 	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
 
-	customerIDRaw, err := server.store.GetCustomerIDByUsername(ctx, authPayload.Username)
+	account_IDRaw, err := server.store.GetAccountIDByUsername(ctx, authPayload.Username)
+	fmt.Println("[DEBUG]|Account id:", account_IDRaw)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
@@ -32,12 +34,13 @@ func (server *Server) CreateDiscount(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	customerID := sql.NullInt32{
-		Int32: int32(customerIDRaw),
+	accountID := sql.NullInt32{
+		Int32: int32(account_IDRaw),
 		Valid: true,
 	}
 
-	productIDRaw, err := server.store.GetProdIDByCusID(ctx, customerID)
+	productIDRaw, err := server.store.GetProdIDByAccountID(ctx, accountID)
+	fmt.Println("[DEBUG]|Product id:", productIDRaw)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
@@ -46,17 +49,20 @@ func (server *Server) CreateDiscount(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
+
+	productID := sql.NullInt32{
+		Int32: int32(req.ProductID),
+		Valid: true,
+	}
+
 	if productIDRaw != req.ProductID {
 		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "permission denied: you do not own this product"})
-	}
-	productID := sql.NullInt32{
-		Int32: int32(productIDRaw),
-		Valid: true,
 	}
 
 	arg := db.CreateDiscountParams{
 		DiscountValue: req.DiscountValue,
 		ProductID:     productID,
+		AccountID:     accountID,
 	}
 
 	discount, err := server.store.CreateDiscount(ctx, arg)
@@ -68,7 +74,7 @@ func (server *Server) CreateDiscount(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	price, err := server.store.GetPriceByID(ctx, productIDRaw)
+	price, err := server.store.GetPriceByID(ctx, req.ProductID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))

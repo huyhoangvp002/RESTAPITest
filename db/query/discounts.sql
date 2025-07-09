@@ -1,19 +1,20 @@
 -- name: CreateDiscount :one
 INSERT INTO discounts (
   discount_value,
+  account_id,
   product_id,
-  customer_id
+  created_at
 ) VALUES (
-  $1, $2, $3
+  $1, $2, $3, $4
 )
-RETURNING id, discount_value, product_id, customer_id, created_at;
+RETURNING id, discount_value, account_id, product_id, created_at;
 
 -- name: GetDiscount :one
 SELECT
   id,
   discount_value,
+  account_id,
   product_id,
-  customer_id,
   created_at
 FROM
   discounts
@@ -24,8 +25,8 @@ WHERE
 SELECT
   id,
   discount_value,
+  account_id,
   product_id,
-  customer_id,
   created_at
 FROM
   discounts
@@ -38,30 +39,32 @@ SET
   discount_value = $2
 WHERE
   id = $1
-RETURNING id, discount_value, product_id, customer_id, created_at;
+RETURNING id, discount_value, account_id, product_id, created_at;
 
 -- name: DeleteDiscount :exec
 DELETE FROM discounts
 WHERE id = $1;
 
--- name: ListDiscountsByCustomerID :many
+-- name: ListDiscountsByAccountID :many
 SELECT
   id,
   discount_value,
+  account_id,
   product_id,
-  customer_id,
   created_at
 FROM
   discounts
 WHERE
-  customer_id = $1
+  account_id = $1
 ORDER BY
   id;
 
--- name: GetProductIDByCustomerID :one
+-- name: GetProductIDByAccountID :one
 SELECT
   product_id
 FROM
   discounts
 WHERE
-  customer_id = $1;
+  account_id = $1;
+
+--

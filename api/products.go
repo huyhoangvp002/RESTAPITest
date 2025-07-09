@@ -39,7 +39,7 @@ func (server *Server) CreateProduct(ctx *gin.Context) {
 		return
 	}
 
-	CID := sql.NullInt32{
+	AccountID := sql.NullInt32{
 		Int32: int32(id),
 		Valid: true,
 	}
@@ -48,7 +48,7 @@ func (server *Server) CreateProduct(ctx *gin.Context) {
 		Name:          req.Name,
 		Price:         req.Price,
 		DiscountPrice: req.Price,
-		CustomersID:   CID,
+		AccountID:     AccountID,
 		CategoryID:    sql.NullInt32{Int32: req.CategoryID, Valid: true},
 		Value:         req.Value,
 	}
@@ -222,7 +222,7 @@ func (server *Server) ListProductByCustomerID(ctx *gin.Context) {
 
 	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
 
-	cusID, err := server.store.GetCustomerIDByUsername(ctx, authPayload.Username)
+	cusID, err := server.store.GetAccountIDByUsername(ctx, authPayload.Username)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
@@ -232,18 +232,18 @@ func (server *Server) ListProductByCustomerID(ctx *gin.Context) {
 		return
 	}
 	fmt.Println("[DEBUG]|Customer ID :", cusID)
-	customerID := sql.NullInt32{
+	accountID := sql.NullInt32{
 		Int32: int32(cusID),
 		Valid: true,
 	}
 
-	arg := db.ListProductByCustomerIDParams{
-		CustomersID: customerID,
-		Limit:       req.PageSize,
-		Offset:      (req.PageID - 1) * req.PageSize,
+	arg := db.ListProductByAccountIDParams{
+		AccountID: accountID,
+		Limit:     req.PageSize,
+		Offset:    (req.PageID - 1) * req.PageSize,
 	}
 
-	product, err := server.store.ListProductByCustomerID(ctx, arg)
+	product, err := server.store.ListProductByAccountID(ctx, arg)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))

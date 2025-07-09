@@ -46,19 +46,20 @@ func (server *Server) setUpRouter() {
 
 	authRoutes.POST("/categories", roleMiddleware("admin"), server.createCategory)
 	authRoutes.POST("/products", server.CreateProduct)
-	authRoutes.POST("/discount", roleMiddleware("admin", "customer"), server.CreateDiscount)
-	authRoutes.POST("/createcustomer", roleMiddleware("admin", "customer"), server.CreateCustomer)
+	authRoutes.POST("/discount", roleMiddleware("admin", "dealer"), server.CreateDiscount)
 	authRoutes.POST("/updaterole", roleMiddleware("admin"), server.UpdateRole)
+	authRoutes.POST("/create_info", server.CreateAccountInfo)
 
 	authRoutes.GET("/products/:id", server.GetProduct)
 	authRoutes.GET("/products/categories", server.GetProductByCate)
 	authRoutes.GET("/products", server.ListByMaxPrice)
 	authRoutes.GET("/accounts", server.GetAccountByUsername)
 	authRoutes.GET("/products/all", server.ListProducts)
-	authRoutes.GET("/listaccounts", roleMiddleware("admin", "customer"), server.ListAccounts)
-	authRoutes.GET("/listproductbycustomerID", roleMiddleware("customer", "admin"), server.ListProductByCustomerID)
+	authRoutes.GET("/listaccounts", roleMiddleware("admin", "dealer"), server.ListAccounts)
 
 	authRoutes.PATCH("/products", server.UdateProduct)
+
+	authRoutes.DELETE("/deleteaccount", server.DeleteAccount)
 	// router.GET("/products", server.getProductByCateRequest)
 
 	server.router = router

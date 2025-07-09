@@ -1,21 +1,23 @@
 -- name: CreateCategory :one
-INSERT INTO categories (name, type)
-VALUES ($1, $2)
-RETURNING id, name, type, created_at;
+INSERT INTO categories (name, type, account_id, created_at)
+VALUES ($1, $2, $3, $4)
+RETURNING id, name, type, account_id, created_at;
 
 -- name: GetCategory :one
-SELECT id, name, type, created_at FROM categories
+SELECT id, name, type, account_id, created_at
+FROM categories
 WHERE id = $1;
 
 -- name: ListCategories :many
-SELECT id, name, type, created_at FROM categories
+SELECT id, name, type, account_id, created_at
+FROM categories
 ORDER BY id;
 
 -- name: UpdateCategory :one
 UPDATE categories
-SET name = $2, type = $3
+SET name = $2, type = $3, account_id = $4
 WHERE id = $1
-RETURNING id, name, type, created_at;
+RETURNING id, name, type, account_id, created_at;
 
 -- name: DeleteCategory :exec
 DELETE FROM categories WHERE id = $1;

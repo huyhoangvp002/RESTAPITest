@@ -81,8 +81,21 @@ func (q *Queries) GetAccountByUsername(ctx context.Context, username string) (Ge
 	return i, err
 }
 
+const getAccountIDByUsername = `-- name: GetAccountIDByUsername :one
+SELECT id
+FROM accounts
+WHERE username = $1
+`
+
+func (q *Queries) GetAccountIDByUsername(ctx context.Context, username string) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getAccountIDByUsername, username)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
 const getIDByUserName = `-- name: GetIDByUserName :one
-SELECT id FROM accounts WHERE username =$1
+SELECT id FROM accounts WHERE username = $1
 `
 
 func (q *Queries) GetIDByUserName(ctx context.Context, username string) (int64, error) {
@@ -95,7 +108,7 @@ func (q *Queries) GetIDByUserName(ctx context.Context, username string) (int64, 
 const listAccounts = `-- name: ListAccounts :many
 SELECT id, username, role
 FROM accounts
-ORDER BY id 
+ORDER BY id
 LIMIT $1 OFFSET $2
 `
 
