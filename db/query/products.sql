@@ -1,10 +1,10 @@
 -- name: CreateProduct :one
 INSERT INTO products (
-    name, price, discount_price, category_id, value, customers_id
+    name, price, discount_price, category_id, value, account_id, created_at
 ) VALUES (
-    $1, $2, $3, $4, $5, $6
+    $1, $2, $3, $4, $5, $6, $7
 )
-RETURNING id, name, price, discount_price, category_id, value, customers_id, created_at;
+RETURNING id, name, price, discount_price, category_id, value, account_id, created_at;
 
 -- name: GetProduct :one
 SELECT
@@ -15,7 +15,7 @@ SELECT
   c.name AS category_name,
   c.type AS category_type,
   p.value,
-  p.customers_id,
+  p.account_id,
   p.created_at
 FROM
   products AS p
@@ -33,7 +33,7 @@ SELECT
   c.name AS category_name,
   c.type AS category_type,
   p.value,
-  p.customers_id,
+  p.account_id,
   p.created_at
 FROM
   products AS p
@@ -48,7 +48,7 @@ SET
   price = $2,
   value = $3
 WHERE id = $1
-RETURNING id, name, price, discount_price, value, customers_id, category_id, created_at;
+RETURNING id, name, price, discount_price, value, account_id, category_id, created_at;
 
 -- name: DeleteProduct :exec
 DELETE FROM products WHERE id = $1;
@@ -60,7 +60,7 @@ SELECT
   p.price,
   p.discount_price,
   p.value,
-  p.customers_id,
+  p.account_id,
   p.created_at
 FROM
   products AS p
@@ -76,7 +76,7 @@ SELECT
   p.price,
   p.discount_price,
   p.value,
-  p.customers_id,
+  p.account_id,
   p.created_at,
   c.name AS category_name
 FROM
@@ -85,7 +85,6 @@ JOIN
   categories AS c ON p.category_id = c.id
 WHERE
   p.discount_price < $1
-  
 ORDER BY p.discount_price ASC;
 
 -- name: UpdateDiscountPrice :exec
@@ -100,26 +99,26 @@ SELECT price
 FROM products
 WHERE id = $1;
 
--- name: ListProductByCustomerID :many
+-- name: ListProductByAccountID :many
 SELECT
   p.id,
   p.name,
   p.price,
   p.discount_price,
   p.value,
-  p.customers_id,
+  p.account_id,
   p.created_at
 FROM
   products AS p
 WHERE
-  p.customers_id = $1
+  p.account_id = $1
 ORDER BY p.id
 LIMIT $2 OFFSET $3;
 
--- name: GetProdIDByCusID :one
+-- name: GetProdIDByAccountID :one
 SELECT
   p.id
 FROM
   products AS p
 WHERE
-  p.customers_id = $1;
+  p.account_id = $1;

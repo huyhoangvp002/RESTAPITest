@@ -16,7 +16,7 @@ WHERE username = $1;
 -- name: ListAccounts :many
 SELECT id, username, role
 FROM accounts
-ORDER BY id 
+ORDER BY id
 LIMIT $1 OFFSET $2;
 
 -- name: UpdateAccount :one
@@ -30,13 +30,17 @@ RETURNING id, username, role;
 -- name: DeleteAccount :exec
 DELETE FROM accounts WHERE id = $1;
 
-
 -- name: GetIDByUserName :one
-SELECT id FROM accounts WHERE username =$1;
+SELECT id FROM accounts WHERE username = $1;
 
 -- name: UpdateRole :one
 UPDATE accounts
 SET role = $2
 WHERE id = $1
 RETURNING id, username, role;
+
+-- name: GetAccountIDByUsername :one
+SELECT id
+FROM accounts
+WHERE username = $1;
 

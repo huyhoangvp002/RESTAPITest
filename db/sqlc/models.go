@@ -17,27 +17,39 @@ type Account struct {
 	CreatedAt    time.Time `json:"created_at"`
 }
 
-type Category struct {
+type AccountInfo struct {
+	ID          int64         `json:"id"`
+	Name        string        `json:"name"`
+	Email       string        `json:"email"`
+	PhoneNumber string        `json:"phone_number"`
+	Address     string        `json:"address"`
+	AccountID   sql.NullInt32 `json:"account_id"`
+	CreatedAt   time.Time     `json:"created_at"`
+	UpdateAt    time.Time     `json:"update_at"`
+}
+
+type Cart struct {
 	ID        int64     `json:"id"`
-	Name      string    `json:"name"`
-	Type      string    `json:"type"`
+	Value     int32     `json:"value"`
+	AccountID int32     `json:"account_id"`
+	ProductID int32     `json:"product_id"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
-type Customer struct {
+type Category struct {
 	ID        int64         `json:"id"`
 	Name      string        `json:"name"`
+	Type      string        `json:"type"`
 	AccountID sql.NullInt32 `json:"account_id"`
-	Email     string        `json:"email"`
 	CreatedAt time.Time     `json:"created_at"`
 }
 
 type Discount struct {
 	ID            int64         `json:"id"`
 	DiscountValue int32         `json:"discount_value"`
+	AccountID     sql.NullInt32 `json:"account_id"`
 	ProductID     sql.NullInt32 `json:"product_id"`
 	CreatedAt     time.Time     `json:"created_at"`
-	CustomerID    sql.NullInt32 `json:"customer_id"`
 }
 
 type Product struct {
@@ -45,8 +57,8 @@ type Product struct {
 	Name          string        `json:"name"`
 	Price         int32         `json:"price"`
 	DiscountPrice int32         `json:"discount_price"`
-	CategoryID    sql.NullInt32 `json:"category_id"`
 	Value         int32         `json:"value"`
-	CustomersID   sql.NullInt32 `json:"customers_id"`
+	AccountID     sql.NullInt32 `json:"account_id"`
+	CategoryID    sql.NullInt32 `json:"category_id"`
 	CreatedAt     time.Time     `json:"created_at"`
 }

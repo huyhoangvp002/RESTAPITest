@@ -11,42 +11,46 @@ import (
 
 type Querier interface {
 	CreateAccount(ctx context.Context, arg CreateAccountParams) (CreateAccountRow, error)
+	CreateAccountInfo(ctx context.Context, arg CreateAccountInfoParams) (AccountInfo, error)
+	CreateCart(ctx context.Context, arg CreateCartParams) (Cart, error)
 	CreateCategory(ctx context.Context, arg CreateCategoryParams) (Category, error)
-	CreateCustomer(ctx context.Context, arg CreateCustomerParams) (Customer, error)
-	CreateDiscount(ctx context.Context, arg CreateDiscountParams) (CreateDiscountRow, error)
-	CreateProduct(ctx context.Context, arg CreateProductParams) (Product, error)
+	CreateDiscount(ctx context.Context, arg CreateDiscountParams) (Discount, error)
+	CreateProduct(ctx context.Context, arg CreateProductParams) (CreateProductRow, error)
 	DeleteAccount(ctx context.Context, id int64) error
+	DeleteCart(ctx context.Context, id int64) error
 	DeleteCategory(ctx context.Context, id int64) error
-	DeleteCustomer(ctx context.Context, id int64) error
 	DeleteDiscount(ctx context.Context, id int64) error
 	DeleteProduct(ctx context.Context, id int64) error
 	GetAccountByID(ctx context.Context, id int64) (GetAccountByIDRow, error)
 	GetAccountByUsername(ctx context.Context, username string) (GetAccountByUsernameRow, error)
+	GetAccountIDByUsername(ctx context.Context, username string) (int64, error)
+	GetAccountInfo(ctx context.Context, id int64) (AccountInfo, error)
+	GetCart(ctx context.Context, id int64) (Cart, error)
 	GetCategory(ctx context.Context, id int64) (Category, error)
 	GetCategoryIDByName(ctx context.Context, name string) (int64, error)
-	GetCustomer(ctx context.Context, id int64) (Customer, error)
-	GetCustomerIDByUsername(ctx context.Context, username string) (int64, error)
-	GetDiscount(ctx context.Context, id int64) (GetDiscountRow, error)
+	GetDiscount(ctx context.Context, id int64) (Discount, error)
 	GetIDByUserName(ctx context.Context, username string) (int64, error)
 	GetPriceByID(ctx context.Context, id int64) (int32, error)
-	GetProdIDByCusID(ctx context.Context, customersID sql.NullInt32) (int64, error)
+	GetProdIDByAccountID(ctx context.Context, accountID sql.NullInt32) (int64, error)
 	GetProduct(ctx context.Context, id int64) (GetProductRow, error)
-	GetProductIDByCustomerID(ctx context.Context, customerID sql.NullInt32) (sql.NullInt32, error)
+	GetProductIDByAccountID(ctx context.Context, accountID sql.NullInt32) (sql.NullInt32, error)
+	ListAccountInfos(ctx context.Context, arg ListAccountInfosParams) ([]AccountInfo, error)
 	ListAccounts(ctx context.Context, arg ListAccountsParams) ([]ListAccountsRow, error)
+	ListCarts(ctx context.Context, arg ListCartsParams) ([]Cart, error)
 	ListCategories(ctx context.Context) ([]Category, error)
-	ListCustomers(ctx context.Context, arg ListCustomersParams) ([]Customer, error)
-	ListDiscounts(ctx context.Context) ([]ListDiscountsRow, error)
-	ListDiscountsByCustomerID(ctx context.Context, customerID sql.NullInt32) ([]ListDiscountsByCustomerIDRow, error)
-	ListProductByCustomerID(ctx context.Context, arg ListProductByCustomerIDParams) ([]ListProductByCustomerIDRow, error)
+	ListDiscounts(ctx context.Context) ([]Discount, error)
+	ListDiscountsByAccountID(ctx context.Context, accountID sql.NullInt32) ([]Discount, error)
+	ListProductByAccountID(ctx context.Context, arg ListProductByAccountIDParams) ([]ListProductByAccountIDRow, error)
 	ListProducts(ctx context.Context, arg ListProductsParams) ([]ListProductsRow, error)
 	ListProductsByCategoryID(ctx context.Context, arg ListProductsByCategoryIDParams) ([]ListProductsByCategoryIDRow, error)
 	ListProductsByMaxPrice(ctx context.Context, discountPrice int32) ([]ListProductsByMaxPriceRow, error)
 	UpdateAccount(ctx context.Context, arg UpdateAccountParams) (UpdateAccountRow, error)
+	UpdateAccountInfo(ctx context.Context, arg UpdateAccountInfoParams) (AccountInfo, error)
+	UpdateCartValue(ctx context.Context, arg UpdateCartValueParams) (Cart, error)
 	UpdateCategory(ctx context.Context, arg UpdateCategoryParams) (Category, error)
-	UpdateCustomer(ctx context.Context, arg UpdateCustomerParams) (Customer, error)
-	UpdateDiscount(ctx context.Context, arg UpdateDiscountParams) (UpdateDiscountRow, error)
+	UpdateDiscount(ctx context.Context, arg UpdateDiscountParams) (Discount, error)
 	UpdateDiscountPrice(ctx context.Context, arg UpdateDiscountPriceParams) error
-	UpdateProduct(ctx context.Context, arg UpdateProductParams) (UpdateProductRow, error)
+	UpdateProduct(ctx context.Context, arg UpdateProductParams) (Product, error)
 	UpdateRole(ctx context.Context, arg UpdateRoleParams) (UpdateRoleRow, error)
 }
 

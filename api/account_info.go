@@ -9,13 +9,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type createCustomerRequest struct {
-	Name  string `json:"name" binding:"required"`
-	Email string `json:"email" binding:"required,email"`
+type createCAccountInfoRequest struct {
+	Name        string `json:"name" binding:"required"`
+	Email       string `json:"email" binding:"required,email"`
+	PhoneNumber string `json:"phone_number" binding:"required"`
+	Address     string `json:"address" binding:"required"`
 }
 
-func (server *Server) CreateCustomer(ctx *gin.Context) {
-	var req createCustomerRequest
+func (server *Server) CreateAccountInfo(ctx *gin.Context) {
+	var req createCAccountInfoRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -37,13 +39,15 @@ func (server *Server) CreateCustomer(ctx *gin.Context) {
 		Int32: int32(id),
 		Valid: true,
 	}
-	arg := db.CreateCustomerParams{
-		Name:      req.Name,
-		AccountID: CID,
-		Email:     req.Email,
+	arg := db.CreateAccountInfoParams{
+		Name:        req.Name,
+		AccountID:   CID,
+		Email:       req.Email,
+		PhoneNumber: req.PhoneNumber,
+		Address:     req.Address,
 	}
 
-	customer, err := server.store.CreateCustomer(ctx, arg)
+	customer, err := server.store.CreateAccountInfo(ctx, arg)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))

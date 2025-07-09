@@ -30,7 +30,7 @@ func (server *Server) CreateAccount(ctx *gin.Context) {
 	arg := db.CreateAccountParams{
 		Username:     req.Username,
 		HashPassword: HashedPassword,
-		Role:         "user",
+		Role:         "customer",
 	}
 	account, err := server.store.CreateAccount(ctx, arg)
 	if err != nil {
@@ -192,5 +192,55 @@ func (server *Server) UpdateRole(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, account)
+
+}
+
+type deleteAccountRequest struct {
+	ID int64 `form:"id" binding:"required"`
+}
+
+func (server *Server) DeleteAccount(ctx *gin.Context) {
+	var req deleteAccountRequest
+
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+	}
+
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+
+	if authPayload.Role == "admin" {
+
+		_, err := server.store.GetAccountByID(ctx, req.ID)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				ctx.JSON(http.StatusNotFound, errorResponse(err))
+				return
+			}
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+		server.store.DeleteAccount(ctx, req.ID)
+
+		ctx.JSON(http.StatusOK, gin.H{"msg": "Delete Successfully"})
+		return
+
+	}
+
+	accountID, err := server.store.GetIDByUserName(ctx, authPayload.Username)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	if accountID != req.ID {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"err": "Permission deny!"})
+		return
+	}
+	server.store.DeleteAccount(ctx, req.ID)
+
+	ctx.JSON(http.StatusOK, gin.H{"msg": "Delete Successfully"})
 
 }
