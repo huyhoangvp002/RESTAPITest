@@ -75,33 +75,45 @@ func (q *Queries) GetCart(ctx context.Context, id int64) (Cart, error) {
 	return i, err
 }
 
-const listCarts = `-- name: ListCarts :many
-SELECT id, value, account_id, product_id, created_at FROM cart
-ORDER BY id
-LIMIT $1 OFFSET $2
+const listCartByAccountID = `-- name: ListCartByAccountID :many
+SELECT
+ p.name AS product_name,
+  c.id,
+  c.value
+ 
+FROM
+  cart AS c
+JOIN
+  products AS p ON c.product_id = p.id
+WHERE
+  c.account_id = $1
+ORDER BY
+  c.id
+LIMIT $2 OFFSET $3
 `
 
-type ListCartsParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
+type ListCartByAccountIDParams struct {
+	AccountID int32 `json:"account_id"`
+	Limit     int32 `json:"limit"`
+	Offset    int32 `json:"offset"`
 }
 
-func (q *Queries) ListCarts(ctx context.Context, arg ListCartsParams) ([]Cart, error) {
-	rows, err := q.db.QueryContext(ctx, listCarts, arg.Limit, arg.Offset)
+type ListCartByAccountIDRow struct {
+	ProductName string `json:"product_name"`
+	ID          int64  `json:"id"`
+	Value       int32  `json:"value"`
+}
+
+func (q *Queries) ListCartByAccountID(ctx context.Context, arg ListCartByAccountIDParams) ([]ListCartByAccountIDRow, error) {
+	rows, err := q.db.QueryContext(ctx, listCartByAccountID, arg.AccountID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Cart{}
+	items := []ListCartByAccountIDRow{}
 	for rows.Next() {
-		var i Cart
-		if err := rows.Scan(
-			&i.ID,
-			&i.Value,
-			&i.AccountID,
-			&i.ProductID,
-			&i.CreatedAt,
-		); err != nil {
+		var i ListCartByAccountIDRow
+		if err := rows.Scan(&i.ProductName, &i.ID, &i.Value); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

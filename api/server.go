@@ -49,13 +49,15 @@ func (server *Server) setUpRouter() {
 	authRoutes.POST("/discount", roleMiddleware("admin", "dealer"), server.CreateDiscount)
 	authRoutes.POST("/updaterole", roleMiddleware("admin"), server.UpdateRole)
 	authRoutes.POST("/create_info", server.CreateAccountInfo)
+	authRoutes.POST("/cart/add", roleMiddleware("admin", "customer"), server.AddToCart)
 
 	authRoutes.GET("/products/:id", server.GetProduct)
 	authRoutes.GET("/products/categories", server.GetProductByCate)
 	authRoutes.GET("/products", server.ListByMaxPrice)
 	authRoutes.GET("/accounts", server.GetAccountByUsername)
 	authRoutes.GET("/products/all", server.ListProducts)
-	authRoutes.GET("/listaccounts", roleMiddleware("admin", "dealer"), server.ListAccounts)
+	authRoutes.GET("/listaccounts", server.ListAccounts)
+	authRoutes.GET("/cart/show", server.ShowCart)
 
 	authRoutes.PATCH("/products", server.UdateProduct)
 

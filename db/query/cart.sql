@@ -13,10 +13,21 @@ RETURNING *;
 SELECT * FROM cart
 WHERE id = $1;
 
--- name: ListCarts :many
-SELECT * FROM cart
-ORDER BY id
-LIMIT $1 OFFSET $2;
+-- name: ListCartByAccountID :many
+SELECT
+ p.name AS product_name,
+  c.id,
+  c.value
+ 
+FROM
+  cart AS c
+JOIN
+  products AS p ON c.product_id = p.id
+WHERE
+  c.account_id = $1
+ORDER BY
+  c.id
+LIMIT $2 OFFSET $3;
 
 -- name: UpdateCartValue :one
 UPDATE cart
