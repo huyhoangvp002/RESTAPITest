@@ -6,7 +6,7 @@ const (
 	C = "customer"
 )
 
-func isValidRole(role string) bool {
+func IsValidRole(role string) bool {
 	switch role {
 	case U, A, C:
 		return true

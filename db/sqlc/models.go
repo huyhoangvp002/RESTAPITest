@@ -33,8 +33,7 @@ type Customer struct {
 }
 
 type Discount struct {
-	ID int64 `json:"id"`
-	// 0<value<100
+	ID            int64         `json:"id"`
 	DiscountValue int32         `json:"discount_value"`
 	ProductID     sql.NullInt32 `json:"product_id"`
 	CreatedAt     time.Time     `json:"created_at"`
@@ -42,15 +41,12 @@ type Discount struct {
 }
 
 type Product struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
-	// CHECK (price > 0)
-	Price int32 `json:"price"`
-	// CHECK (0 < discount_price <= price)
+	ID            int64         `json:"id"`
+	Name          string        `json:"name"`
+	Price         int32         `json:"price"`
 	DiscountPrice int32         `json:"discount_price"`
 	CategoryID    sql.NullInt32 `json:"category_id"`
-	// CHECK (price >= 0)
-	Value       int32         `json:"value"`
-	CustomersID sql.NullInt32 `json:"customers_id"`
-	CreatedAt   time.Time     `json:"created_at"`
+	Value         int32         `json:"value"`
+	CustomersID   sql.NullInt32 `json:"customers_id"`
+	CreatedAt     time.Time     `json:"created_at"`
 }

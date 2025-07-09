@@ -47,6 +47,7 @@ type Querier interface {
 	UpdateDiscount(ctx context.Context, arg UpdateDiscountParams) (UpdateDiscountRow, error)
 	UpdateDiscountPrice(ctx context.Context, arg UpdateDiscountPriceParams) error
 	UpdateProduct(ctx context.Context, arg UpdateProductParams) (UpdateProductRow, error)
+	UpdateRole(ctx context.Context, arg UpdateRoleParams) (UpdateRoleRow, error)
 }
 
 var _ Querier = (*Queries)(nil)

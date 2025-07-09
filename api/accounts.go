@@ -13,7 +13,6 @@ import (
 type createAccountRequest struct {
 	Username string `json:"username" binding:"required"`
 	Password string `json:"hash_password" binding:"required,min=6"`
-	Role     string `json:"role" binding:"required,oneof=customer admin user"`
 }
 
 func (server *Server) CreateAccount(ctx *gin.Context) {
@@ -31,7 +30,7 @@ func (server *Server) CreateAccount(ctx *gin.Context) {
 	arg := db.CreateAccountParams{
 		Username:     req.Username,
 		HashPassword: HashedPassword,
-		Role:         req.Role,
+		Role:         "user",
 	}
 	account, err := server.store.CreateAccount(ctx, arg)
 	if err != nil {
@@ -149,6 +148,41 @@ func (server *Server) ListAccounts(ctx *gin.Context) {
 		return
 	}
 	account, err := server.store.GetAccountByUsername(ctx, authPayload.Username)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	ctx.JSON(http.StatusOK, account)
+
+}
+
+type updateRoleRequest struct {
+	ID   int    `json:"id" binding:"required"`
+	Role string `json:"role" binding:"required"`
+}
+
+func (server *Server) UpdateRole(ctx *gin.Context) {
+	var req updateRoleRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	if !util.IsValidRole(req.Role) {
+		ctx.JSON(http.StatusBadRequest, gin.H{"err": "Invalid Role"})
+		return
+	}
+
+	arg := db.UpdateRoleParams{
+		ID:   int64(req.ID),
+		Role: req.Role,
+	}
+
+	account, err := server.store.UpdateRole(ctx, arg)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
