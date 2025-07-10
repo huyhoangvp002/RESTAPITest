@@ -57,6 +57,19 @@ func (q *Queries) DeleteCart(ctx context.Context, id int64) error {
 	return err
 }
 
+const getAccountIDByCartID = `-- name: GetAccountIDByCartID :one
+SELECT account_id
+FROM cart
+WHERE id = $1
+`
+
+func (q *Queries) GetAccountIDByCartID(ctx context.Context, id int64) (int32, error) {
+	row := q.db.QueryRowContext(ctx, getAccountIDByCartID, id)
+	var account_id int32
+	err := row.Scan(&account_id)
+	return account_id, err
+}
+
 const getCart = `-- name: GetCart :one
 SELECT id, value, account_id, product_id, created_at FROM cart
 WHERE id = $1

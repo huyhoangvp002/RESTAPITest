@@ -13,6 +13,11 @@ RETURNING *;
 SELECT * FROM cart
 WHERE id = $1;
 
+-- name: GetAccountIDByCartID :one
+SELECT account_id
+FROM cart
+WHERE id = $1;
+
 -- name: ListCartByAccountID :many
 SELECT
  p.name AS product_name,
@@ -39,3 +44,5 @@ RETURNING *;
 -- name: DeleteCart :exec
 DELETE FROM cart
 WHERE id = $1;
+
+

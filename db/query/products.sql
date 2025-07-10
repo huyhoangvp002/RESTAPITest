@@ -122,3 +122,6 @@ FROM
   products AS p
 WHERE
   p.account_id = $1;
+
+-- name: GetAccountIDbyProductID :one
+SELECT account_id FROM products WHERE id = $1;

@@ -196,13 +196,13 @@ func (server *Server) UpdateRole(ctx *gin.Context) {
 }
 
 type deleteAccountRequest struct {
-	ID int64 `form:"id" binding:"required"`
+	ID int64 `uri:"id" binding:"required"`
 }
 
 func (server *Server) DeleteAccount(ctx *gin.Context) {
 	var req deleteAccountRequest
 
-	if err := ctx.ShouldBindQuery(&req); err != nil {
+	if err := ctx.ShouldBindUri(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 	}
 

@@ -45,7 +45,7 @@ func (server *Server) setUpRouter() {
 	authRoutes := router.Group("/").Use(authMiddleware(server.tokenMaker))
 
 	authRoutes.POST("/categories", roleMiddleware("admin"), server.createCategory)
-	authRoutes.POST("/products", server.CreateProduct)
+	authRoutes.POST("/products", roleMiddleware("admin", "dealer"), server.CreateProduct)
 	authRoutes.POST("/discount", roleMiddleware("admin", "dealer"), server.CreateDiscount)
 	authRoutes.POST("/updaterole", roleMiddleware("admin"), server.UpdateRole)
 	authRoutes.POST("/create_info", server.CreateAccountInfo)
@@ -56,12 +56,16 @@ func (server *Server) setUpRouter() {
 	authRoutes.GET("/products", server.ListByMaxPrice)
 	authRoutes.GET("/accounts", server.GetAccountByUsername)
 	authRoutes.GET("/products/all", server.ListProducts)
-	authRoutes.GET("/listaccounts", server.ListAccounts)
+	authRoutes.GET("/account/list", server.ListAccounts)
 	authRoutes.GET("/cart/show", server.ShowCart)
 
-	authRoutes.PATCH("/products", server.UdateProduct)
+	authRoutes.PATCH("/products/:id", server.UdateProduct)
+	authRoutes.PATCH("/cart/update/:id", server.UpdateProductInCart)
 
-	authRoutes.DELETE("/deleteaccount", server.DeleteAccount)
+	authRoutes.DELETE("/account/delete/:id", server.DeleteAccount)
+	authRoutes.DELETE("/cart/delete/:id", server.DeleteCart)
+	authRoutes.DELETE("/product/delete/:id", roleMiddleware("admin", "dealer"), server.DeleteProduct)
+	authRoutes.DELETE("/category/delete/:id", roleMiddleware("admin"), server.DeleteCategories)
 	// router.GET("/products", server.getProductByCateRequest)
 
 	server.router = router

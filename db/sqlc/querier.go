@@ -23,7 +23,9 @@ type Querier interface {
 	DeleteProduct(ctx context.Context, id int64) error
 	GetAccountByID(ctx context.Context, id int64) (GetAccountByIDRow, error)
 	GetAccountByUsername(ctx context.Context, username string) (GetAccountByUsernameRow, error)
+	GetAccountIDByCartID(ctx context.Context, id int64) (int32, error)
 	GetAccountIDByUsername(ctx context.Context, username string) (int64, error)
+	GetAccountIDbyProductID(ctx context.Context, id int64) (sql.NullInt32, error)
 	GetAccountInfo(ctx context.Context, id int64) (AccountInfo, error)
 	GetCart(ctx context.Context, id int64) (Cart, error)
 	GetCategory(ctx context.Context, id int64) (Category, error)
@@ -37,7 +39,7 @@ type Querier interface {
 	ListAccountInfos(ctx context.Context, arg ListAccountInfosParams) ([]AccountInfo, error)
 	ListAccounts(ctx context.Context, arg ListAccountsParams) ([]ListAccountsRow, error)
 	ListCartByAccountID(ctx context.Context, arg ListCartByAccountIDParams) ([]ListCartByAccountIDRow, error)
-	ListCategories(ctx context.Context) ([]Category, error)
+	ListCategories(ctx context.Context, arg ListCategoriesParams) ([]Category, error)
 	ListDiscounts(ctx context.Context) ([]Discount, error)
 	ListDiscountsByAccountID(ctx context.Context, accountID sql.NullInt32) ([]Discount, error)
 	ListProductByAccountID(ctx context.Context, arg ListProductByAccountIDParams) ([]ListProductByAccountIDRow, error)

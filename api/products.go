@@ -128,13 +128,51 @@ func (server *Server) GetProductByCate(ctx *gin.Context) {
 
 }
 
+type IDRequest struct {
+	ID int64 `uri:"id" binding:"required"`
+}
+
 type updateProductRequest struct {
-	ID    int64 `json:"id" binding:"required"`
 	Price int32 `json:"price" binding:"required,min=1"`
 	Value int32 `json:"value" binding:"required,min=0"`
 }
 
 func (server *Server) UdateProduct(ctx *gin.Context) {
+	var idReq IDRequest
+	if err := ctx.ShouldBindUri(&idReq); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+
+	authAccountID, err := server.store.GetAccountIDByUsername(ctx, authPayload.Username)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	accountID := sql.NullInt32{
+		Int32: int32(authAccountID),
+		Valid: true,
+	}
+
+	reqAccountID, err := server.store.GetAccountIDbyProductID(ctx, idReq.ID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	if reqAccountID != accountID {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"err": "Permission deny!"})
+	}
+
 	var req updateProductRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"Error": err.Error()})
@@ -142,7 +180,7 @@ func (server *Server) UdateProduct(ctx *gin.Context) {
 	}
 
 	arg := db.UpdateProductParams{
-		ID:    req.ID,
+		ID:    idReq.ID,
 		Price: req.Price,
 		Value: req.Value,
 	}
@@ -253,4 +291,66 @@ func (server *Server) ListProductByCustomerID(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, product)
+}
+
+func (server *Server) DeleteProduct(ctx *gin.Context) {
+	var req IDRequest
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	if authPayload.Role == "admin" {
+		err := server.store.DeleteProduct(ctx, req.ID)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				ctx.JSON(http.StatusNotFound, errorResponse(err))
+				return
+			}
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusOK, gin.H{"msg": "Delete Successfully!"})
+		return
+	}
+
+	authAccountID, err := server.store.GetAccountIDByUsername(ctx, authPayload.Username)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	accountID := sql.NullInt32{
+		Int32: int32(authAccountID),
+		Valid: true,
+	}
+
+	reqAccountID, err := server.store.GetAccountIDbyProductID(ctx, req.ID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	if reqAccountID != accountID {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"err": "Permission deny!"})
+		return
+	}
+
+	err = server.store.DeleteProduct(ctx, req.ID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"err": "Delete Successfully!"})
+
 }

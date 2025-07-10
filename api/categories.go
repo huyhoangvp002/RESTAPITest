@@ -32,6 +32,7 @@ func (server *Server) createCategory(ctx *gin.Context) {
 			return
 		}
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
 	}
 
 	account_ID := sql.NullInt32{
@@ -51,4 +52,51 @@ func (server *Server) createCategory(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, cate)
+}
+
+type listCategoriesRequest struct {
+	PageID   int `form:"page_id" binding:"required,min=1"`
+	PageSize int `form:"page_size" binding:"required,min=5,max=10"`
+}
+
+func (server *Server) ListCategories(ctx *gin.Context) {
+	var req listCategoriesRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+	}
+
+	arg := db.ListCategoriesParams{
+		Limit:  int32(req.PageID),
+		Offset: int32((req.PageID - 1) * req.PageSize),
+	}
+
+	cate, err := server.store.ListCategories(ctx, arg)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	ctx.JSON(http.StatusOK, cate)
+}
+
+func (server *Server) DeleteCategories(ctx *gin.Context) {
+	var req IDRequest
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	err := server.store.DeleteCategory(ctx, req.ID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"msg": "Delete Successfully!"})
+
 }

@@ -11,7 +11,9 @@ WHERE id = $1;
 -- name: ListCategories :many
 SELECT id, name, type, account_id, created_at
 FROM categories
-ORDER BY id;
+ORDER BY id 
+LIMIT $1 
+OFFSET $2;
 
 -- name: UpdateCategory :one
 UPDATE categories
