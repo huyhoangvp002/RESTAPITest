@@ -74,6 +74,17 @@ func (q *Queries) DeleteProduct(ctx context.Context, id int64) error {
 	return err
 }
 
+const getAccountIDbyProductID = `-- name: GetAccountIDbyProductID :one
+SELECT account_id FROM products WHERE id = $1
+`
+
+func (q *Queries) GetAccountIDbyProductID(ctx context.Context, id int64) (sql.NullInt32, error) {
+	row := q.db.QueryRowContext(ctx, getAccountIDbyProductID, id)
+	var account_id sql.NullInt32
+	err := row.Scan(&account_id)
+	return account_id, err
+}
+
 const getPriceByID = `-- name: GetPriceByID :one
 SELECT price
 FROM products
