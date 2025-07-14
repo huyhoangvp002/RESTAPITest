@@ -18,47 +18,77 @@ type Account struct {
 }
 
 type AccountInfo struct {
-	ID          int64         `json:"id"`
-	Name        string        `json:"name"`
-	Email       string        `json:"email"`
-	PhoneNumber string        `json:"phone_number"`
-	Address     string        `json:"address"`
-	AccountID   sql.NullInt32 `json:"account_id"`
-	CreatedAt   time.Time     `json:"created_at"`
-	UpdateAt    time.Time     `json:"update_at"`
+	ID          int64     `json:"id"`
+	AccountID   int64     `json:"account_id"`
+	Name        string    `json:"name"`
+	Email       string    `json:"email"`
+	PhoneNumber string    `json:"phone_number"`
+	Address     string    `json:"address"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
-type Cart struct {
+type CartItem struct {
 	ID        int64     `json:"id"`
-	Value     int32     `json:"value"`
-	AccountID int32     `json:"account_id"`
-	ProductID int32     `json:"product_id"`
+	AccountID int64     `json:"account_id"`
+	ProductID int64     `json:"product_id"`
+	Quantity  int32     `json:"quantity"`
 	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type Category struct {
-	ID        int64         `json:"id"`
-	Name      string        `json:"name"`
-	Type      string        `json:"type"`
-	AccountID sql.NullInt32 `json:"account_id"`
-	CreatedAt time.Time     `json:"created_at"`
+	ID        int64     `json:"id"`
+	AccountID int64     `json:"account_id"`
+	Name      string    `json:"name"`
+	Type      string    `json:"type"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type Discount struct {
 	ID            int64         `json:"id"`
+	AccountID     sql.NullInt64 `json:"account_id"`
+	ProductID     sql.NullInt64 `json:"product_id"`
 	DiscountValue int32         `json:"discount_value"`
-	AccountID     sql.NullInt32 `json:"account_id"`
-	ProductID     sql.NullInt32 `json:"product_id"`
 	CreatedAt     time.Time     `json:"created_at"`
 }
 
+type Order struct {
+	ID         int64     `json:"id"`
+	BuyerID    int64     `json:"buyer_id"`
+	SellerID   int64     `json:"seller_id"`
+	TotalPrice int64     `json:"total_price"`
+	Cod        bool      `json:"cod"`
+	Status     string    `json:"status"`
+	CreatedAt  time.Time `json:"created_at"`
+}
+
+type OrderItem struct {
+	ID        int64 `json:"id"`
+	OrderID   int64 `json:"order_id"`
+	ProductID int64 `json:"product_id"`
+	Quantity  int32 `json:"quantity"`
+	PriceEach int64 `json:"price_each"`
+}
+
 type Product struct {
-	ID            int64         `json:"id"`
-	Name          string        `json:"name"`
-	Price         int32         `json:"price"`
-	DiscountPrice int32         `json:"discount_price"`
-	Value         int32         `json:"value"`
-	AccountID     sql.NullInt32 `json:"account_id"`
-	CategoryID    sql.NullInt32 `json:"category_id"`
-	CreatedAt     time.Time     `json:"created_at"`
+	ID            int64     `json:"id"`
+	AccountID     int64     `json:"account_id"`
+	CategoryID    int64     `json:"category_id"`
+	Name          string    `json:"name"`
+	Price         int32     `json:"price"`
+	DiscountPrice int32     `json:"discount_price"`
+	StockQuantity int32     `json:"stock_quantity"`
+	CreatedAt     time.Time `json:"created_at"`
+}
+
+type Shipment struct {
+	ID           int64     `json:"id"`
+	OrderID      int64     `json:"order_id"`
+	Carrier      string    `json:"carrier"`
+	ShipmentCode string    `json:"shipment_code"`
+	Fee          int64     `json:"fee"`
+	Status       string    `json:"status"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }

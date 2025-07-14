@@ -34,12 +34,12 @@ func (server *Server) CreateDiscount(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	accountID := sql.NullInt32{
-		Int32: int32(account_IDRaw),
+	accountID := sql.NullInt64{
+		Int64: (account_IDRaw),
 		Valid: true,
 	}
 
-	productIDRaw, err := server.store.GetProdIDByAccountID(ctx, accountID)
+	productIDRaw, err := server.store.GetProdIDByAccountID(ctx, account_IDRaw)
 	fmt.Println("[DEBUG]|Product id:", productIDRaw)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -50,8 +50,8 @@ func (server *Server) CreateDiscount(ctx *gin.Context) {
 		return
 	}
 
-	productID := sql.NullInt32{
-		Int32: int32(req.ProductID),
+	productID := sql.NullInt64{
+		Int64: (req.ProductID),
 		Valid: true,
 	}
 

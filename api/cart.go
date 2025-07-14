@@ -33,23 +33,13 @@ func (server *Server) AddToCart(ctx *gin.Context) {
 		return
 	}
 
-	account_id := sql.NullInt32{
-		Int32: int32(account_id_raw),
-		Valid: true,
+	arg := db.CreateCartItemParams{
+		Quantity:  int32(req.Value),
+		AccountID: account_id_raw,
+		ProductID: int64(req.Product_ID),
 	}
 
-	product_id := sql.NullInt32{
-		Int32: int32(req.Product_ID),
-		Valid: true,
-	}
-
-	arg := db.CreateCartParams{
-		Value:     int32(req.Value),
-		AccountID: account_id.Int32,
-		ProductID: product_id.Int32,
-	}
-
-	cart, err := server.store.CreateCart(ctx, arg)
+	cart, err := server.store.CreateCartItem(ctx, arg)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
@@ -85,13 +75,13 @@ func (server *Server) ShowCart(ctx *gin.Context) {
 		return
 	}
 
-	arg := db.ListCartByAccountIDParams{
-		AccountID: int32(account_id_raw),
+	arg := db.ListCartItemsByAccountIDParams{
+		AccountID: int64(account_id_raw),
 		Limit:     int32(req.PageSize),
 		Offset:    int32((req.PageID - 1) * req.PageSize),
 	}
 
-	cart, err := server.store.ListCartByAccountID(ctx, arg)
+	cart, err := server.store.ListCartItemsByAccountID(ctx, arg)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
@@ -104,12 +94,8 @@ func (server *Server) ShowCart(ctx *gin.Context) {
 
 }
 
-type ID_Request struct {
-	ID int `uri:"id" binding:"required"`
-}
-
 type updateValueRequest struct {
-	Value int `json:"value" binding:"required,min=1"`
+	Quantity int `json:"quantity" binding:"required,min=1"`
 }
 
 // func (server *Server) UpdateProductInCart(ctx *gin.Context) {
@@ -171,7 +157,7 @@ func (server *Server) UpdateProductInCart(ctx *gin.Context) {
 	log.Println("[DEBUG] UpdateProductInCart called")
 
 	// 1. Bind URI param
-	var req ID_Request
+	var req IDRequest
 	if err := ctx.ShouldBindUri(&req); err != nil {
 		log.Printf("[ERROR] Failed to bind URI: %v", err)
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
@@ -184,7 +170,7 @@ func (server *Server) UpdateProductInCart(ctx *gin.Context) {
 	log.Printf("[DEBUG] Auth username: %s", authPayload.Username)
 
 	// 3. Get accountID by CartID
-	accountID_request, err := server.store.GetAccountIDByCartID(ctx, int64(req.ID))
+	accountID_request, err := server.store.GetAccountIDByCartItemID(ctx, int64(req.ID))
 	if err != nil {
 		if err == sql.ErrNoRows {
 			log.Printf("[WARN] No cart found with id %d", req.ID)
@@ -212,7 +198,7 @@ func (server *Server) UpdateProductInCart(ctx *gin.Context) {
 	log.Printf("[DEBUG] AccountID from token: %d", accountID_payload)
 
 	// 5. Check ownership
-	if accountID_request != int32(accountID_payload) {
+	if accountID_request != int64(accountID_payload) {
 		log.Printf("[WARN] Permission denied! AccountID in cart: %d, from token: %d", accountID_request, accountID_payload)
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Permission denied!"})
 		return
@@ -225,17 +211,17 @@ func (server *Server) UpdateProductInCart(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	log.Printf("[DEBUG] JSON body Value: %d", req1.Value)
+	log.Printf("[DEBUG] JSON body Value: %d", req1.Quantity)
 
 	// 7. Build update param
-	arg := db.UpdateCartValueParams{
-		ID:    int64(req.ID),
-		Value: int32(req1.Value),
+	arg := db.UpdateCartItemQuantityParams{
+		ID:       int64(req.ID),
+		Quantity: int32(req1.Quantity),
 	}
 	log.Printf("[DEBUG] UpdateCartValueParams: %+v", arg)
 
 	// 8. Call store
-	cart, err := server.store.UpdateCartValue(ctx, arg)
+	cart, err := server.store.UpdateCartItemQuantity(ctx, arg)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			log.Printf("[WARN] No cart to update with id %d", req.ID)
@@ -252,7 +238,7 @@ func (server *Server) UpdateProductInCart(ctx *gin.Context) {
 }
 
 func (server *Server) DeleteCart(ctx *gin.Context) {
-	var req ID_Request
+	var req IDRequest
 	if err := ctx.ShouldBindUri(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -260,7 +246,7 @@ func (server *Server) DeleteCart(ctx *gin.Context) {
 
 	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
 
-	accountID_request, err := server.store.GetAccountIDByCartID(ctx, int64(req.ID))
+	accountID_request, err := server.store.GetAccountIDByCartItemID(ctx, int64(req.ID))
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
@@ -280,12 +266,12 @@ func (server *Server) DeleteCart(ctx *gin.Context) {
 		return
 	}
 
-	if accountID_request != int32(accountID_payload) {
+	if accountID_request != accountID_payload {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"err": "Permission deny!"})
 		return
 	}
 
-	err = server.store.DeleteCart(ctx, int64(req.ID))
+	err = server.store.DeleteCartItem(ctx, int64(req.ID))
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))

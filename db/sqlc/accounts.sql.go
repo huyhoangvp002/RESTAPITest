@@ -12,7 +12,7 @@ import (
 const createAccount = `-- name: CreateAccount :one
 INSERT INTO accounts (username, hash_password, role)
 VALUES ($1, $2, $3)
-RETURNING id, username, role
+RETURNING id, username, hash_password, role, created_at
 `
 
 type CreateAccountParams struct {
@@ -21,16 +21,16 @@ type CreateAccountParams struct {
 	Role         string `json:"role"`
 }
 
-type CreateAccountRow struct {
-	ID       int64  `json:"id"`
-	Username string `json:"username"`
-	Role     string `json:"role"`
-}
-
-func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (CreateAccountRow, error) {
+func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (Account, error) {
 	row := q.db.QueryRowContext(ctx, createAccount, arg.Username, arg.HashPassword, arg.Role)
-	var i CreateAccountRow
-	err := row.Scan(&i.ID, &i.Username, &i.Role)
+	var i Account
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.HashPassword,
+		&i.Role,
+		&i.CreatedAt,
+	)
 	return i, err
 }
 
@@ -44,47 +44,41 @@ func (q *Queries) DeleteAccount(ctx context.Context, id int64) error {
 }
 
 const getAccountByID = `-- name: GetAccountByID :one
-SELECT id, username, role
-FROM accounts
-WHERE id = $1
+SELECT id, username, hash_password, role, created_at FROM accounts WHERE id = $1
 `
 
-type GetAccountByIDRow struct {
-	ID       int64  `json:"id"`
-	Username string `json:"username"`
-	Role     string `json:"role"`
-}
-
-func (q *Queries) GetAccountByID(ctx context.Context, id int64) (GetAccountByIDRow, error) {
+func (q *Queries) GetAccountByID(ctx context.Context, id int64) (Account, error) {
 	row := q.db.QueryRowContext(ctx, getAccountByID, id)
-	var i GetAccountByIDRow
-	err := row.Scan(&i.ID, &i.Username, &i.Role)
+	var i Account
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.HashPassword,
+		&i.Role,
+		&i.CreatedAt,
+	)
 	return i, err
 }
 
 const getAccountByUsername = `-- name: GetAccountByUsername :one
-SELECT username, hash_password, role
-FROM accounts
-WHERE username = $1
+SELECT id, username, hash_password, role, created_at FROM accounts WHERE username = $1
 `
 
-type GetAccountByUsernameRow struct {
-	Username     string `json:"username"`
-	HashPassword string `json:"hash_password"`
-	Role         string `json:"role"`
-}
-
-func (q *Queries) GetAccountByUsername(ctx context.Context, username string) (GetAccountByUsernameRow, error) {
+func (q *Queries) GetAccountByUsername(ctx context.Context, username string) (Account, error) {
 	row := q.db.QueryRowContext(ctx, getAccountByUsername, username)
-	var i GetAccountByUsernameRow
-	err := row.Scan(&i.Username, &i.HashPassword, &i.Role)
+	var i Account
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.HashPassword,
+		&i.Role,
+		&i.CreatedAt,
+	)
 	return i, err
 }
 
 const getAccountIDByUsername = `-- name: GetAccountIDByUsername :one
-SELECT id
-FROM accounts
-WHERE username = $1
+SELECT id FROM accounts WHERE username = $1
 `
 
 func (q *Queries) GetAccountIDByUsername(ctx context.Context, username string) (int64, error) {
@@ -106,10 +100,7 @@ func (q *Queries) GetIDByUserName(ctx context.Context, username string) (int64, 
 }
 
 const listAccounts = `-- name: ListAccounts :many
-SELECT id, username, role
-FROM accounts
-ORDER BY id
-LIMIT $1 OFFSET $2
+SELECT id, username, hash_password, role, created_at FROM accounts ORDER BY id LIMIT $1 OFFSET $2
 `
 
 type ListAccountsParams struct {
@@ -117,22 +108,22 @@ type ListAccountsParams struct {
 	Offset int32 `json:"offset"`
 }
 
-type ListAccountsRow struct {
-	ID       int64  `json:"id"`
-	Username string `json:"username"`
-	Role     string `json:"role"`
-}
-
-func (q *Queries) ListAccounts(ctx context.Context, arg ListAccountsParams) ([]ListAccountsRow, error) {
+func (q *Queries) ListAccounts(ctx context.Context, arg ListAccountsParams) ([]Account, error) {
 	rows, err := q.db.QueryContext(ctx, listAccounts, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListAccountsRow{}
+	items := []Account{}
 	for rows.Next() {
-		var i ListAccountsRow
-		if err := rows.Scan(&i.ID, &i.Username, &i.Role); err != nil {
+		var i Account
+		if err := rows.Scan(
+			&i.ID,
+			&i.Username,
+			&i.HashPassword,
+			&i.Role,
+			&i.CreatedAt,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -152,7 +143,7 @@ SET username = $2,
     hash_password = $3,
     role = $4
 WHERE id = $1
-RETURNING id, username, role
+RETURNING id, username, hash_password, role, created_at
 `
 
 type UpdateAccountParams struct {
@@ -162,29 +153,26 @@ type UpdateAccountParams struct {
 	Role         string `json:"role"`
 }
 
-type UpdateAccountRow struct {
-	ID       int64  `json:"id"`
-	Username string `json:"username"`
-	Role     string `json:"role"`
-}
-
-func (q *Queries) UpdateAccount(ctx context.Context, arg UpdateAccountParams) (UpdateAccountRow, error) {
+func (q *Queries) UpdateAccount(ctx context.Context, arg UpdateAccountParams) (Account, error) {
 	row := q.db.QueryRowContext(ctx, updateAccount,
 		arg.ID,
 		arg.Username,
 		arg.HashPassword,
 		arg.Role,
 	)
-	var i UpdateAccountRow
-	err := row.Scan(&i.ID, &i.Username, &i.Role)
+	var i Account
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.HashPassword,
+		&i.Role,
+		&i.CreatedAt,
+	)
 	return i, err
 }
 
 const updateRole = `-- name: UpdateRole :one
-UPDATE accounts
-SET role = $2
-WHERE id = $1
-RETURNING id, username, role
+UPDATE accounts SET role = $2 WHERE id = $1 RETURNING id, username, hash_password, role, created_at
 `
 
 type UpdateRoleParams struct {
@@ -192,15 +180,15 @@ type UpdateRoleParams struct {
 	Role string `json:"role"`
 }
 
-type UpdateRoleRow struct {
-	ID       int64  `json:"id"`
-	Username string `json:"username"`
-	Role     string `json:"role"`
-}
-
-func (q *Queries) UpdateRole(ctx context.Context, arg UpdateRoleParams) (UpdateRoleRow, error) {
+func (q *Queries) UpdateRole(ctx context.Context, arg UpdateRoleParams) (Account, error) {
 	row := q.db.QueryRowContext(ctx, updateRole, arg.ID, arg.Role)
-	var i UpdateRoleRow
-	err := row.Scan(&i.ID, &i.Username, &i.Role)
+	var i Account
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.HashPassword,
+		&i.Role,
+		&i.CreatedAt,
+	)
 	return i, err
 }

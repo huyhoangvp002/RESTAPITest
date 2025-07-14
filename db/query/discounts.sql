@@ -2,69 +2,28 @@
 INSERT INTO discounts (
   discount_value,
   account_id,
-  product_id,
-  created_at
+  product_id
 ) VALUES (
-  $1, $2, $3, $4
-)
-RETURNING id, discount_value, account_id, product_id, created_at;
+  $1, $2, $3
+) RETURNING *;
 
 -- name: GetDiscount :one
-SELECT
-  id,
-  discount_value,
-  account_id,
-  product_id,
-  created_at
-FROM
-  discounts
-WHERE
-  id = $1;
+SELECT * FROM discounts WHERE id = $1;
 
 -- name: ListDiscounts :many
-SELECT
-  id,
-  discount_value,
-  account_id,
-  product_id,
-  created_at
-FROM
-  discounts
-ORDER BY
-  id;
+SELECT * FROM discounts ORDER BY id LIMIT $1 OFFSET $2;
 
 -- name: UpdateDiscount :one
 UPDATE discounts
-SET
-  discount_value = $2
-WHERE
-  id = $1
-RETURNING id, discount_value, account_id, product_id, created_at;
+SET discount_value = $2
+WHERE id = $1
+RETURNING *;
 
 -- name: DeleteDiscount :exec
-DELETE FROM discounts
-WHERE id = $1;
+DELETE FROM discounts WHERE id = $1;
 
 -- name: ListDiscountsByAccountID :many
-SELECT
-  id,
-  discount_value,
-  account_id,
-  product_id,
-  created_at
-FROM
-  discounts
-WHERE
-  account_id = $1
-ORDER BY
-  id;
+SELECT * FROM discounts WHERE account_id = $1 ORDER BY id LIMIT $2 OFFSET $3;
 
 -- name: GetProductIDByAccountID :one
-SELECT
-  product_id
-FROM
-  discounts
-WHERE
-  account_id = $1;
-
---
+SELECT product_id FROM discounts WHERE account_id = $1;

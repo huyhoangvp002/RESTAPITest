@@ -30,7 +30,7 @@ func (server *Server) CreateAccount(ctx *gin.Context) {
 	arg := db.CreateAccountParams{
 		Username:     req.Username,
 		HashPassword: HashedPassword,
-		Role:         "customer",
+		Role:         "buyer",
 	}
 	account, err := server.store.CreateAccount(ctx, arg)
 	if err != nil {

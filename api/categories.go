@@ -35,15 +35,10 @@ func (server *Server) createCategory(ctx *gin.Context) {
 		return
 	}
 
-	account_ID := sql.NullInt32{
-		Int32: int32(account_IDRaw),
-		Valid: true,
-	}
-
 	arg := db.CreateCategoryParams{
 		Name:      req.Name,
 		Type:      req.Type,
-		AccountID: account_ID,
+		AccountID: account_IDRaw,
 	}
 
 	cate, err := server.store.CreateCategory(ctx, arg)

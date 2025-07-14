@@ -15,7 +15,7 @@ type createProductRequest struct {
 	Name       string `json:"name" binding:"required"`
 	Price      int32  `json:"price" binding:"required,min=1"`
 	CategoryID int32  `json:"category_id" binding:"required"`
-	Value      int32  `json:"value" binding:"required,min=0"`
+	Stock      int32  `json:"stock" binding:"required,min=0"`
 }
 
 func (server *Server) CreateProduct(ctx *gin.Context) {
@@ -39,18 +39,13 @@ func (server *Server) CreateProduct(ctx *gin.Context) {
 		return
 	}
 
-	AccountID := sql.NullInt32{
-		Int32: int32(id),
-		Valid: true,
-	}
-
 	arg := db.CreateProductParams{
 		Name:          req.Name,
 		Price:         req.Price,
 		DiscountPrice: req.Price,
-		AccountID:     AccountID,
-		CategoryID:    sql.NullInt32{Int32: req.CategoryID, Valid: true},
-		Value:         req.Value,
+		AccountID:     id,
+		CategoryID:    int64(req.CategoryID),
+		StockQuantity: req.Stock,
 	}
 	product, err := server.store.CreateProduct(ctx, arg)
 	if err != nil {
@@ -107,13 +102,8 @@ func (server *Server) GetProductByCate(ctx *gin.Context) {
 		return
 	}
 
-	categoryID := sql.NullInt32{
-		Int32: int32(cateID),
-		Valid: true,
-	}
-
 	arg := db.ListProductsByCategoryIDParams{
-		CategoryID: categoryID,
+		CategoryID: cateID,
 		Offset:     req.PageSize,
 		Limit:      (req.PageID - 1) * req.PageSize,
 	}
@@ -134,7 +124,7 @@ type IDRequest struct {
 
 type updateProductRequest struct {
 	Price int32 `json:"price" binding:"required,min=1"`
-	Value int32 `json:"value" binding:"required,min=0"`
+	Stock int32 `json:"stock" binding:"required,min=0"`
 }
 
 func (server *Server) UdateProduct(ctx *gin.Context) {
@@ -155,10 +145,6 @@ func (server *Server) UdateProduct(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	accountID := sql.NullInt32{
-		Int32: int32(authAccountID),
-		Valid: true,
-	}
 
 	reqAccountID, err := server.store.GetAccountIDbyProductID(ctx, idReq.ID)
 	if err != nil {
@@ -169,7 +155,7 @@ func (server *Server) UdateProduct(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	if reqAccountID != accountID {
+	if reqAccountID != authAccountID {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"err": "Permission deny!"})
 	}
 
@@ -180,9 +166,9 @@ func (server *Server) UdateProduct(ctx *gin.Context) {
 	}
 
 	arg := db.UpdateProductParams{
-		ID:    idReq.ID,
-		Price: req.Price,
-		Value: req.Value,
+		ID:            idReq.ID,
+		Price:         req.Price,
+		StockQuantity: req.Stock,
 	}
 	product, err := server.store.UpdateProduct(ctx, arg)
 	if err != nil {
@@ -270,13 +256,9 @@ func (server *Server) ListProductByCustomerID(ctx *gin.Context) {
 		return
 	}
 	fmt.Println("[DEBUG]|Customer ID :", cusID)
-	accountID := sql.NullInt32{
-		Int32: int32(cusID),
-		Valid: true,
-	}
 
 	arg := db.ListProductByAccountIDParams{
-		AccountID: accountID,
+		AccountID: cusID,
 		Limit:     req.PageSize,
 		Offset:    (req.PageID - 1) * req.PageSize,
 	}
@@ -323,10 +305,6 @@ func (server *Server) DeleteProduct(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	accountID := sql.NullInt32{
-		Int32: int32(authAccountID),
-		Valid: true,
-	}
 
 	reqAccountID, err := server.store.GetAccountIDbyProductID(ctx, req.ID)
 	if err != nil {
@@ -337,7 +315,7 @@ func (server *Server) DeleteProduct(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	if reqAccountID != accountID {
+	if reqAccountID != authAccountID {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"err": "Permission deny!"})
 		return
 	}
@@ -353,4 +331,57 @@ func (server *Server) DeleteProduct(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusOK, gin.H{"err": "Delete Successfully!"})
 
+}
+
+type searchProductByNameRequest struct {
+	Name string `form:"name"`
+}
+
+func (server *Server) SearchProductByName(ctx *gin.Context) {
+	var pagingReq listProductsRequest
+	if err := ctx.ShouldBindQuery(&pagingReq); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	arg := db.ListProductsParams{
+		Limit:  pagingReq.PageSize,
+		Offset: (pagingReq.PageID - 1) * pagingReq.PageSize,
+	}
+	var nameReq searchProductByNameRequest
+	ctx.ShouldBindQuery(&nameReq)
+	if nameReq.Name == "" {
+		product, err := server.store.ListProducts(ctx, arg)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				ctx.JSON(http.StatusNotFound, errorResponse(err))
+				return
+			}
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusOK, product)
+		return
+	}
+
+	productName := sql.NullString{
+		String: nameReq.Name,
+		Valid:  true,
+	}
+
+	arg2 := db.SearchProductsByNameParams{
+		Column1: productName,
+		Limit:   pagingReq.PageSize,
+		Offset:  (pagingReq.PageID - 1) * pagingReq.PageSize,
+	}
+	product, err := server.store.SearchProductsByName(ctx, arg2)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	ctx.JSON(http.StatusOK, product)
 }

@@ -1,10 +1,9 @@
 -- name: CreateProduct :one
 INSERT INTO products (
-    name, price, discount_price, category_id, value, account_id, created_at
+  account_id, category_id, name, price, discount_price, stock_quantity
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7
-)
-RETURNING id, name, price, discount_price, category_id, value, account_id, created_at;
+  $1, $2, $3, $4, $5, $6
+) RETURNING *;
 
 -- name: GetProduct :one
 SELECT
@@ -14,7 +13,7 @@ SELECT
   p.discount_price,
   c.name AS category_name,
   c.type AS category_type,
-  p.value,
+  p.stock_quantity,
   p.account_id,
   p.created_at
 FROM
@@ -32,9 +31,7 @@ SELECT
   p.discount_price,
   c.name AS category_name,
   c.type AS category_type,
-  p.value,
-  p.account_id,
-  p.created_at
+  p.stock_quantity
 FROM
   products AS p
 JOIN
@@ -46,9 +43,9 @@ LIMIT $1 OFFSET $2;
 UPDATE products
 SET
   price = $2,
-  value = $3
+  stock_quantity = $3
 WHERE id = $1
-RETURNING id, name, price, discount_price, value, account_id, category_id, created_at;
+RETURNING *;
 
 -- name: DeleteProduct :exec
 DELETE FROM products WHERE id = $1;
@@ -59,7 +56,7 @@ SELECT
   p.name,
   p.price,
   p.discount_price,
-  p.value,
+  p.stock_quantity,
   p.account_id,
   p.created_at
 FROM
@@ -75,7 +72,7 @@ SELECT
   p.name,
   p.price,
   p.discount_price,
-  p.value,
+  p.stock_quantity,
   p.account_id,
   p.created_at,
   c.name AS category_name
@@ -89,15 +86,10 @@ ORDER BY p.discount_price ASC;
 
 -- name: UpdateDiscountPrice :exec
 UPDATE products
-SET
-  discount_price = $2
-WHERE
-  id = $1;
+SET discount_price = $2 WHERE id = $1;
 
 -- name: GetPriceByID :one
-SELECT price
-FROM products
-WHERE id = $1;
+SELECT price FROM products WHERE id = $1;
 
 -- name: ListProductByAccountID :many
 SELECT
@@ -105,7 +97,7 @@ SELECT
   p.name,
   p.price,
   p.discount_price,
-  p.value,
+  p.stock_quantity,
   p.account_id,
   p.created_at
 FROM
@@ -116,12 +108,35 @@ ORDER BY p.id
 LIMIT $2 OFFSET $3;
 
 -- name: GetProdIDByAccountID :one
-SELECT
-  p.id
-FROM
-  products AS p
-WHERE
-  p.account_id = $1;
+SELECT p.id FROM products AS p WHERE p.account_id = $1;
 
 -- name: GetAccountIDbyProductID :one
 SELECT account_id FROM products WHERE id = $1;
+
+-- name: SearchProductsByName :many
+SELECT
+  p.id,
+  p.name,
+  p.price,
+  p.discount_price,
+  p.stock_quantity,
+  c.name AS category_name
+FROM
+  products AS p
+JOIN
+  categories AS c ON p.category_id = c.id
+WHERE
+  p.name ILIKE '%' || $1 || '%'
+ORDER BY p.id
+LIMIT $2 OFFSET $3;
+
+-- name: UpdateProductStockByID :exec
+UPDATE products
+SET stock_quantity = $1
+WHERE id = $2;
+
+-- name: GetDiscountPriceByID :one
+SELECT discount_price FROM products WHERE id = $1;
+
+-- name: GetStockByID :one
+SELECT stock_quantity FROM products WHERE id = $1;

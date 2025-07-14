@@ -8,49 +8,39 @@ package db
 import (
 	"context"
 	"database/sql"
-	"time"
 )
 
 const createDiscount = `-- name: CreateDiscount :one
 INSERT INTO discounts (
   discount_value,
   account_id,
-  product_id,
-  created_at
+  product_id
 ) VALUES (
-  $1, $2, $3, $4
-)
-RETURNING id, discount_value, account_id, product_id, created_at
+  $1, $2, $3
+) RETURNING id, account_id, product_id, discount_value, created_at
 `
 
 type CreateDiscountParams struct {
 	DiscountValue int32         `json:"discount_value"`
-	AccountID     sql.NullInt32 `json:"account_id"`
-	ProductID     sql.NullInt32 `json:"product_id"`
-	CreatedAt     time.Time     `json:"created_at"`
+	AccountID     sql.NullInt64 `json:"account_id"`
+	ProductID     sql.NullInt64 `json:"product_id"`
 }
 
 func (q *Queries) CreateDiscount(ctx context.Context, arg CreateDiscountParams) (Discount, error) {
-	row := q.db.QueryRowContext(ctx, createDiscount,
-		arg.DiscountValue,
-		arg.AccountID,
-		arg.ProductID,
-		arg.CreatedAt,
-	)
+	row := q.db.QueryRowContext(ctx, createDiscount, arg.DiscountValue, arg.AccountID, arg.ProductID)
 	var i Discount
 	err := row.Scan(
 		&i.ID,
-		&i.DiscountValue,
 		&i.AccountID,
 		&i.ProductID,
+		&i.DiscountValue,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const deleteDiscount = `-- name: DeleteDiscount :exec
-DELETE FROM discounts
-WHERE id = $1
+DELETE FROM discounts WHERE id = $1
 `
 
 func (q *Queries) DeleteDiscount(ctx context.Context, id int64) error {
@@ -59,16 +49,7 @@ func (q *Queries) DeleteDiscount(ctx context.Context, id int64) error {
 }
 
 const getDiscount = `-- name: GetDiscount :one
-SELECT
-  id,
-  discount_value,
-  account_id,
-  product_id,
-  created_at
-FROM
-  discounts
-WHERE
-  id = $1
+SELECT id, account_id, product_id, discount_value, created_at FROM discounts WHERE id = $1
 `
 
 func (q *Queries) GetDiscount(ctx context.Context, id int64) (Discount, error) {
@@ -76,45 +57,36 @@ func (q *Queries) GetDiscount(ctx context.Context, id int64) (Discount, error) {
 	var i Discount
 	err := row.Scan(
 		&i.ID,
-		&i.DiscountValue,
 		&i.AccountID,
 		&i.ProductID,
+		&i.DiscountValue,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const getProductIDByAccountID = `-- name: GetProductIDByAccountID :one
-SELECT
-  product_id
-FROM
-  discounts
-WHERE
-  account_id = $1
+SELECT product_id FROM discounts WHERE account_id = $1
 `
 
-func (q *Queries) GetProductIDByAccountID(ctx context.Context, accountID sql.NullInt32) (sql.NullInt32, error) {
+func (q *Queries) GetProductIDByAccountID(ctx context.Context, accountID sql.NullInt64) (sql.NullInt64, error) {
 	row := q.db.QueryRowContext(ctx, getProductIDByAccountID, accountID)
-	var product_id sql.NullInt32
+	var product_id sql.NullInt64
 	err := row.Scan(&product_id)
 	return product_id, err
 }
 
 const listDiscounts = `-- name: ListDiscounts :many
-SELECT
-  id,
-  discount_value,
-  account_id,
-  product_id,
-  created_at
-FROM
-  discounts
-ORDER BY
-  id
+SELECT id, account_id, product_id, discount_value, created_at FROM discounts ORDER BY id LIMIT $1 OFFSET $2
 `
 
-func (q *Queries) ListDiscounts(ctx context.Context) ([]Discount, error) {
-	rows, err := q.db.QueryContext(ctx, listDiscounts)
+type ListDiscountsParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+func (q *Queries) ListDiscounts(ctx context.Context, arg ListDiscountsParams) ([]Discount, error) {
+	rows, err := q.db.QueryContext(ctx, listDiscounts, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -124,9 +96,9 @@ func (q *Queries) ListDiscounts(ctx context.Context) ([]Discount, error) {
 		var i Discount
 		if err := rows.Scan(
 			&i.ID,
-			&i.DiscountValue,
 			&i.AccountID,
 			&i.ProductID,
+			&i.DiscountValue,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -143,22 +115,17 @@ func (q *Queries) ListDiscounts(ctx context.Context) ([]Discount, error) {
 }
 
 const listDiscountsByAccountID = `-- name: ListDiscountsByAccountID :many
-SELECT
-  id,
-  discount_value,
-  account_id,
-  product_id,
-  created_at
-FROM
-  discounts
-WHERE
-  account_id = $1
-ORDER BY
-  id
+SELECT id, account_id, product_id, discount_value, created_at FROM discounts WHERE account_id = $1 ORDER BY id LIMIT $2 OFFSET $3
 `
 
-func (q *Queries) ListDiscountsByAccountID(ctx context.Context, accountID sql.NullInt32) ([]Discount, error) {
-	rows, err := q.db.QueryContext(ctx, listDiscountsByAccountID, accountID)
+type ListDiscountsByAccountIDParams struct {
+	AccountID sql.NullInt64 `json:"account_id"`
+	Limit     int32         `json:"limit"`
+	Offset    int32         `json:"offset"`
+}
+
+func (q *Queries) ListDiscountsByAccountID(ctx context.Context, arg ListDiscountsByAccountIDParams) ([]Discount, error) {
+	rows, err := q.db.QueryContext(ctx, listDiscountsByAccountID, arg.AccountID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -168,9 +135,9 @@ func (q *Queries) ListDiscountsByAccountID(ctx context.Context, accountID sql.Nu
 		var i Discount
 		if err := rows.Scan(
 			&i.ID,
-			&i.DiscountValue,
 			&i.AccountID,
 			&i.ProductID,
+			&i.DiscountValue,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -188,11 +155,9 @@ func (q *Queries) ListDiscountsByAccountID(ctx context.Context, accountID sql.Nu
 
 const updateDiscount = `-- name: UpdateDiscount :one
 UPDATE discounts
-SET
-  discount_value = $2
-WHERE
-  id = $1
-RETURNING id, discount_value, account_id, product_id, created_at
+SET discount_value = $2
+WHERE id = $1
+RETURNING id, account_id, product_id, discount_value, created_at
 `
 
 type UpdateDiscountParams struct {
@@ -205,9 +170,9 @@ func (q *Queries) UpdateDiscount(ctx context.Context, arg UpdateDiscountParams) 
 	var i Discount
 	err := row.Scan(
 		&i.ID,
-		&i.DiscountValue,
 		&i.AccountID,
 		&i.ProductID,
+		&i.DiscountValue,
 		&i.CreatedAt,
 	)
 	return i, err

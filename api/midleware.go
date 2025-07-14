@@ -55,14 +55,14 @@ func roleMiddleware(roles ...string) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		payLoadRaw, exists := ctx.Get(authorizationPayloadKey)
 		if !exists {
-			err := errors.New("authorization payload not found!")
+			err := errors.New("authorization payload not found")
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(err))
 			return
 		}
 
 		payLoad, ok := payLoadRaw.(*token.Payload)
 		if !ok {
-			err := errors.New("Invalid payload!")
+			err := errors.New("invalid payload")
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(err))
 			return
 		}

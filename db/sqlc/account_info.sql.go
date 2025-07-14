@@ -7,7 +7,6 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"time"
 )
 
@@ -19,21 +18,20 @@ INSERT INTO account_info (
   address,
   account_id,
   created_at,
-  update_at
+  updated_at
 ) VALUES (
   $1, $2, $3, $4, $5, $6, $7
-)
-RETURNING id, name, email, phone_number, address, account_id, created_at, update_at
+) RETURNING id, account_id, name, email, phone_number, address, created_at, updated_at
 `
 
 type CreateAccountInfoParams struct {
-	Name        string        `json:"name"`
-	Email       string        `json:"email"`
-	PhoneNumber string        `json:"phone_number"`
-	Address     string        `json:"address"`
-	AccountID   sql.NullInt32 `json:"account_id"`
-	CreatedAt   time.Time     `json:"created_at"`
-	UpdateAt    time.Time     `json:"update_at"`
+	Name        string    `json:"name"`
+	Email       string    `json:"email"`
+	PhoneNumber string    `json:"phone_number"`
+	Address     string    `json:"address"`
+	AccountID   int64     `json:"account_id"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 func (q *Queries) CreateAccountInfo(ctx context.Context, arg CreateAccountInfoParams) (AccountInfo, error) {
@@ -44,25 +42,35 @@ func (q *Queries) CreateAccountInfo(ctx context.Context, arg CreateAccountInfoPa
 		arg.Address,
 		arg.AccountID,
 		arg.CreatedAt,
-		arg.UpdateAt,
+		arg.UpdatedAt,
 	)
 	var i AccountInfo
 	err := row.Scan(
 		&i.ID,
+		&i.AccountID,
 		&i.Name,
 		&i.Email,
 		&i.PhoneNumber,
 		&i.Address,
-		&i.AccountID,
 		&i.CreatedAt,
-		&i.UpdateAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
 
+const getAccountID = `-- name: GetAccountID :one
+SELECT account_id FROM account_info WHERE id = $1
+`
+
+func (q *Queries) GetAccountID(ctx context.Context, id int64) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getAccountID, id)
+	var account_id int64
+	err := row.Scan(&account_id)
+	return account_id, err
+}
+
 const getAccountInfo = `-- name: GetAccountInfo :one
-SELECT id, name, email, phone_number, address, account_id, created_at, update_at FROM account_info
-WHERE id = $1
+SELECT id, account_id, name, email, phone_number, address, created_at, updated_at FROM account_info WHERE id = $1
 `
 
 func (q *Queries) GetAccountInfo(ctx context.Context, id int64) (AccountInfo, error) {
@@ -70,21 +78,19 @@ func (q *Queries) GetAccountInfo(ctx context.Context, id int64) (AccountInfo, er
 	var i AccountInfo
 	err := row.Scan(
 		&i.ID,
+		&i.AccountID,
 		&i.Name,
 		&i.Email,
 		&i.PhoneNumber,
 		&i.Address,
-		&i.AccountID,
 		&i.CreatedAt,
-		&i.UpdateAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
 
 const listAccountInfos = `-- name: ListAccountInfos :many
-SELECT id, name, email, phone_number, address, account_id, created_at, update_at FROM account_info
-ORDER BY id
-LIMIT $1 OFFSET $2
+SELECT id, account_id, name, email, phone_number, address, created_at, updated_at FROM account_info ORDER BY id LIMIT $1 OFFSET $2
 `
 
 type ListAccountInfosParams struct {
@@ -103,13 +109,13 @@ func (q *Queries) ListAccountInfos(ctx context.Context, arg ListAccountInfosPara
 		var i AccountInfo
 		if err := rows.Scan(
 			&i.ID,
+			&i.AccountID,
 			&i.Name,
 			&i.Email,
 			&i.PhoneNumber,
 			&i.Address,
-			&i.AccountID,
 			&i.CreatedAt,
-			&i.UpdateAt,
+			&i.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -132,19 +138,19 @@ SET
   phone_number = $4,
   address = $5,
   account_id = $6,
-  update_at = $7
+  updated_at = $7
 WHERE id = $1
-RETURNING id, name, email, phone_number, address, account_id, created_at, update_at
+RETURNING id, account_id, name, email, phone_number, address, created_at, updated_at
 `
 
 type UpdateAccountInfoParams struct {
-	ID          int64         `json:"id"`
-	Name        string        `json:"name"`
-	Email       string        `json:"email"`
-	PhoneNumber string        `json:"phone_number"`
-	Address     string        `json:"address"`
-	AccountID   sql.NullInt32 `json:"account_id"`
-	UpdateAt    time.Time     `json:"update_at"`
+	ID          int64     `json:"id"`
+	Name        string    `json:"name"`
+	Email       string    `json:"email"`
+	PhoneNumber string    `json:"phone_number"`
+	Address     string    `json:"address"`
+	AccountID   int64     `json:"account_id"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 func (q *Queries) UpdateAccountInfo(ctx context.Context, arg UpdateAccountInfoParams) (AccountInfo, error) {
@@ -155,18 +161,74 @@ func (q *Queries) UpdateAccountInfo(ctx context.Context, arg UpdateAccountInfoPa
 		arg.PhoneNumber,
 		arg.Address,
 		arg.AccountID,
-		arg.UpdateAt,
+		arg.UpdatedAt,
 	)
 	var i AccountInfo
 	err := row.Scan(
 		&i.ID,
+		&i.AccountID,
 		&i.Name,
 		&i.Email,
 		&i.PhoneNumber,
 		&i.Address,
-		&i.AccountID,
 		&i.CreatedAt,
-		&i.UpdateAt,
+		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const updateAccountInfoAddress = `-- name: UpdateAccountInfoAddress :exec
+UPDATE account_info SET address = $2, updated_at = NOW() WHERE id = $1
+`
+
+type UpdateAccountInfoAddressParams struct {
+	ID      int64  `json:"id"`
+	Address string `json:"address"`
+}
+
+func (q *Queries) UpdateAccountInfoAddress(ctx context.Context, arg UpdateAccountInfoAddressParams) error {
+	_, err := q.db.ExecContext(ctx, updateAccountInfoAddress, arg.ID, arg.Address)
+	return err
+}
+
+const updateAccountInfoEmail = `-- name: UpdateAccountInfoEmail :exec
+UPDATE account_info SET email = $2, updated_at = NOW() WHERE id = $1
+`
+
+type UpdateAccountInfoEmailParams struct {
+	ID    int64  `json:"id"`
+	Email string `json:"email"`
+}
+
+func (q *Queries) UpdateAccountInfoEmail(ctx context.Context, arg UpdateAccountInfoEmailParams) error {
+	_, err := q.db.ExecContext(ctx, updateAccountInfoEmail, arg.ID, arg.Email)
+	return err
+}
+
+const updateAccountInfoName = `-- name: UpdateAccountInfoName :exec
+UPDATE account_info SET name = $2, updated_at = NOW() WHERE id = $1
+`
+
+type UpdateAccountInfoNameParams struct {
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
+}
+
+func (q *Queries) UpdateAccountInfoName(ctx context.Context, arg UpdateAccountInfoNameParams) error {
+	_, err := q.db.ExecContext(ctx, updateAccountInfoName, arg.ID, arg.Name)
+	return err
+}
+
+const updateAccountInfoPhoneNumber = `-- name: UpdateAccountInfoPhoneNumber :exec
+UPDATE account_info SET phone_number = $2, updated_at = NOW() WHERE id = $1
+`
+
+type UpdateAccountInfoPhoneNumberParams struct {
+	ID          int64  `json:"id"`
+	PhoneNumber string `json:"phone_number"`
+}
+
+func (q *Queries) UpdateAccountInfoPhoneNumber(ctx context.Context, arg UpdateAccountInfoPhoneNumberParams) error {
+	_, err := q.db.ExecContext(ctx, updateAccountInfoPhoneNumber, arg.ID, arg.PhoneNumber)
+	return err
 }
