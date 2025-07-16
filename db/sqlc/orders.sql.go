@@ -55,6 +55,17 @@ func (q *Queries) DeleteOrder(ctx context.Context, id int64) error {
 	return err
 }
 
+const getBuyerIDByOrderID = `-- name: GetBuyerIDByOrderID :one
+SELECT buyer_id FROM orders WHERE id = $1
+`
+
+func (q *Queries) GetBuyerIDByOrderID(ctx context.Context, id int64) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getBuyerIDByOrderID, id)
+	var buyer_id int64
+	err := row.Scan(&buyer_id)
+	return buyer_id, err
+}
+
 const getOrder = `-- name: GetOrder :one
 SELECT id, buyer_id, seller_id, total_price, cod, status, created_at FROM orders WHERE id = $1
 `
@@ -72,6 +83,28 @@ func (q *Queries) GetOrder(ctx context.Context, id int64) (Order, error) {
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const getSellerIDByOrderID = `-- name: GetSellerIDByOrderID :one
+SELECT seller_id FROM orders WHERE id = $1
+`
+
+func (q *Queries) GetSellerIDByOrderID(ctx context.Context, id int64) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getSellerIDByOrderID, id)
+	var seller_id int64
+	err := row.Scan(&seller_id)
+	return seller_id, err
+}
+
+const getTotalPriceByID = `-- name: GetTotalPriceByID :one
+SELECT total_price FROM orders WHERE id = $1
+`
+
+func (q *Queries) GetTotalPriceByID(ctx context.Context, id int64) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getTotalPriceByID, id)
+	var total_price int64
+	err := row.Scan(&total_price)
+	return total_price, err
 }
 
 const listOrders = `-- name: ListOrders :many

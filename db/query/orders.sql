@@ -13,3 +13,12 @@ UPDATE orders SET status = $2 WHERE id = $1 RETURNING *;
 
 -- name: DeleteOrder :exec
 DELETE FROM orders WHERE id = $1;
+
+-- name: GetSellerIDByOrderID :one
+SELECT seller_id FROM orders WHERE id = $1;
+
+-- name: GetBuyerIDByOrderID :one
+SELECT buyer_id FROM orders WHERE id = $1;
+
+-- name: GetTotalPriceByID :one
+SELECT total_price FROM orders WHERE id = $1;

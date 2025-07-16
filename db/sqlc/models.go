@@ -85,7 +85,6 @@ type Product struct {
 type Shipment struct {
 	ID           int64     `json:"id"`
 	OrderID      int64     `json:"order_id"`
-	Carrier      string    `json:"carrier"`
 	ShipmentCode string    `json:"shipment_code"`
 	Fee          int64     `json:"fee"`
 	Status       string    `json:"status"`

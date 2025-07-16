@@ -4,7 +4,9 @@ import (
 	db "RESTAPITest/db/sqlc"
 	"RESTAPITest/token"
 	"RESTAPITest/util"
+	"database/sql"
 	"fmt"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -53,6 +55,7 @@ func (server *Server) setUpRouter() {
 	authRoutes.POST("/create_info", server.CreateAccountInfo)
 	authRoutes.POST("/cart/add", roleMiddleware("admin", "customer"), server.AddToCart)
 	authRoutes.POST("/orders", server.CreateOrder)
+	authRoutes.POST("/shipments", server.CreateShipment)
 
 	authRoutes.GET("/products/:id", server.GetProduct)
 	authRoutes.GET("/products/categories", server.GetProductByCate)
@@ -80,4 +83,11 @@ func (s *Server) Start(address string) error {
 }
 func errorResponse(err error) gin.H {
 	return gin.H{"error": err.Error()}
+}
+
+func statusCodeForError(err error) int {
+	if err == sql.ErrNoRows {
+		return http.StatusNotFound
+	}
+	return http.StatusInternalServerError
 }

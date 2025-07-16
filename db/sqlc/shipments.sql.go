@@ -11,13 +11,12 @@ import (
 )
 
 const createShipment = `-- name: CreateShipment :one
-INSERT INTO shipments (order_id, carrier, shipment_code, fee, status, created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, order_id, carrier, shipment_code, fee, status, created_at, updated_at
+INSERT INTO shipments (order_id, shipment_code, fee, status, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, order_id, shipment_code, fee, status, created_at, updated_at
 `
 
 type CreateShipmentParams struct {
 	OrderID      int64     `json:"order_id"`
-	Carrier      string    `json:"carrier"`
 	ShipmentCode string    `json:"shipment_code"`
 	Fee          int64     `json:"fee"`
 	Status       string    `json:"status"`
@@ -28,7 +27,6 @@ type CreateShipmentParams struct {
 func (q *Queries) CreateShipment(ctx context.Context, arg CreateShipmentParams) (Shipment, error) {
 	row := q.db.QueryRowContext(ctx, createShipment,
 		arg.OrderID,
-		arg.Carrier,
 		arg.ShipmentCode,
 		arg.Fee,
 		arg.Status,
@@ -39,7 +37,6 @@ func (q *Queries) CreateShipment(ctx context.Context, arg CreateShipmentParams) 
 	err := row.Scan(
 		&i.ID,
 		&i.OrderID,
-		&i.Carrier,
 		&i.ShipmentCode,
 		&i.Fee,
 		&i.Status,
@@ -59,7 +56,7 @@ func (q *Queries) DeleteShipment(ctx context.Context, id int64) error {
 }
 
 const getShipment = `-- name: GetShipment :one
-SELECT id, order_id, carrier, shipment_code, fee, status, created_at, updated_at FROM shipments WHERE id = $1
+SELECT id, order_id, shipment_code, fee, status, created_at, updated_at FROM shipments WHERE id = $1
 `
 
 func (q *Queries) GetShipment(ctx context.Context, id int64) (Shipment, error) {
@@ -68,7 +65,6 @@ func (q *Queries) GetShipment(ctx context.Context, id int64) (Shipment, error) {
 	err := row.Scan(
 		&i.ID,
 		&i.OrderID,
-		&i.Carrier,
 		&i.ShipmentCode,
 		&i.Fee,
 		&i.Status,
@@ -79,7 +75,7 @@ func (q *Queries) GetShipment(ctx context.Context, id int64) (Shipment, error) {
 }
 
 const listShipments = `-- name: ListShipments :many
-SELECT id, order_id, carrier, shipment_code, fee, status, created_at, updated_at FROM shipments ORDER BY id LIMIT $1 OFFSET $2
+SELECT id, order_id, shipment_code, fee, status, created_at, updated_at FROM shipments ORDER BY id LIMIT $1 OFFSET $2
 `
 
 type ListShipmentsParams struct {
@@ -99,7 +95,6 @@ func (q *Queries) ListShipments(ctx context.Context, arg ListShipmentsParams) ([
 		if err := rows.Scan(
 			&i.ID,
 			&i.OrderID,
-			&i.Carrier,
 			&i.ShipmentCode,
 			&i.Fee,
 			&i.Status,
@@ -120,7 +115,7 @@ func (q *Queries) ListShipments(ctx context.Context, arg ListShipmentsParams) ([
 }
 
 const updateShipmentStatus = `-- name: UpdateShipmentStatus :one
-UPDATE shipments SET status = $2, updated_at = $3 WHERE id = $1 RETURNING id, order_id, carrier, shipment_code, fee, status, created_at, updated_at
+UPDATE shipments SET status = $2, updated_at = $3 WHERE id = $1 RETURNING id, order_id, shipment_code, fee, status, created_at, updated_at
 `
 
 type UpdateShipmentStatusParams struct {
@@ -135,7 +130,6 @@ func (q *Queries) UpdateShipmentStatus(ctx context.Context, arg UpdateShipmentSt
 	err := row.Scan(
 		&i.ID,
 		&i.OrderID,
-		&i.Carrier,
 		&i.ShipmentCode,
 		&i.Fee,
 		&i.Status,

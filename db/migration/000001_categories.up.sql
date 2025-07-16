@@ -84,13 +84,13 @@ CREATE TABLE order_items (
 CREATE TABLE shipments (
   id BIGSERIAL PRIMARY KEY,
   order_id BIGINT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
-  carrier VARCHAR NOT NULL,
   shipment_code VARCHAR NOT NULL UNIQUE,
   fee BIGINT NOT NULL CHECK (fee >= 0),
   status VARCHAR NOT NULL CHECK (status IN ('created','picked','in_transit','delivered','failed')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
 
 -- Indexes tối ưu truy vấn
 CREATE INDEX idx_products_account ON products(account_id);

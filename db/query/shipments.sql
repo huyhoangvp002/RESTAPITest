@@ -1,6 +1,6 @@
 -- name: CreateShipment :one
-INSERT INTO shipments (order_id, carrier, shipment_code, fee, status, created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *;
+INSERT INTO shipments (order_id, shipment_code, fee, status, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;
 
 -- name: GetShipment :one
 SELECT * FROM shipments WHERE id = $1;

@@ -43,3 +43,13 @@ UPDATE account_info SET phone_number = $2, updated_at = NOW() WHERE id = $1;
 
 -- name: UpdateAccountInfoAddress :exec
 UPDATE account_info SET address = $2, updated_at = NOW() WHERE id = $1;
+
+-- name: GetNameForShipment :one
+SELECT name FROM account_info WHERE account_id = $1;
+
+-- name: GetPhoneForShipment :one
+SELECT phone_number FROM account_info WHERE account_id = $1;
+
+-- name: GetAddressForShipment :one
+SELECT address FROM account_info WHERE account_id = $1;
+

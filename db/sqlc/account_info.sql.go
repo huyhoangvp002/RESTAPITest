@@ -89,6 +89,39 @@ func (q *Queries) GetAccountInfo(ctx context.Context, id int64) (AccountInfo, er
 	return i, err
 }
 
+const getAddressForShipment = `-- name: GetAddressForShipment :one
+SELECT address FROM account_info WHERE account_id = $1
+`
+
+func (q *Queries) GetAddressForShipment(ctx context.Context, accountID int64) (string, error) {
+	row := q.db.QueryRowContext(ctx, getAddressForShipment, accountID)
+	var address string
+	err := row.Scan(&address)
+	return address, err
+}
+
+const getNameForShipment = `-- name: GetNameForShipment :one
+SELECT name FROM account_info WHERE account_id = $1
+`
+
+func (q *Queries) GetNameForShipment(ctx context.Context, accountID int64) (string, error) {
+	row := q.db.QueryRowContext(ctx, getNameForShipment, accountID)
+	var name string
+	err := row.Scan(&name)
+	return name, err
+}
+
+const getPhoneForShipment = `-- name: GetPhoneForShipment :one
+SELECT phone_number FROM account_info WHERE account_id = $1
+`
+
+func (q *Queries) GetPhoneForShipment(ctx context.Context, accountID int64) (string, error) {
+	row := q.db.QueryRowContext(ctx, getPhoneForShipment, accountID)
+	var phone_number string
+	err := row.Scan(&phone_number)
+	return phone_number, err
+}
+
 const listAccountInfos = `-- name: ListAccountInfos :many
 SELECT id, account_id, name, email, phone_number, address, created_at, updated_at FROM account_info ORDER BY id LIMIT $1 OFFSET $2
 `
