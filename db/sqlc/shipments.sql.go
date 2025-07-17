@@ -115,17 +115,17 @@ func (q *Queries) ListShipments(ctx context.Context, arg ListShipmentsParams) ([
 }
 
 const updateShipmentStatus = `-- name: UpdateShipmentStatus :one
-UPDATE shipments SET status = $2, updated_at = $3 WHERE id = $1 RETURNING id, order_id, shipment_code, fee, status, created_at, updated_at
+UPDATE shipments SET status = $2, updated_at = $3 WHERE shipment_code = $1 RETURNING id, order_id, shipment_code, fee, status, created_at, updated_at
 `
 
 type UpdateShipmentStatusParams struct {
-	ID        int64     `json:"id"`
-	Status    string    `json:"status"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ShipmentCode string    `json:"shipment_code"`
+	Status       string    `json:"status"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }
 
 func (q *Queries) UpdateShipmentStatus(ctx context.Context, arg UpdateShipmentStatusParams) (Shipment, error) {
-	row := q.db.QueryRowContext(ctx, updateShipmentStatus, arg.ID, arg.Status, arg.UpdatedAt)
+	row := q.db.QueryRowContext(ctx, updateShipmentStatus, arg.ShipmentCode, arg.Status, arg.UpdatedAt)
 	var i Shipment
 	err := row.Scan(
 		&i.ID,

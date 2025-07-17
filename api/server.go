@@ -45,6 +45,7 @@ func (server *Server) setUpRouter() {
 	router.POST("/signup", server.CreateAccount)
 
 	router.GET("/products", server.SearchProductByName)
+	router.POST("/api/webhook", server.WebHook)
 
 	authRoutes := router.Group("/").Use(authMiddleware(server.tokenMaker))
 

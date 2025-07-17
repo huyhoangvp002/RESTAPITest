@@ -33,8 +33,10 @@ func main() {
 	config := util.Config{
 		TokenSymmetricKey:   os.Getenv("TOKEN_SYMMETRIC_KEY"),
 		AccessTokenDuration: durationStr,
-		ServerAddress:       os.Getenv("TOKEN_SYMMETRIC_KEY"),
+		ServerAddress:       os.Getenv("SERVER_ADDRESS"),
 		DBSource:            os.Getenv("DB_SOURCE"),
+		DeliveryAPI_URL:     os.Getenv("DELIVERY_API_URL"),
+		APIKey:              os.Getenv("API_KEY"),
 	}
 	//  Lấy biến môi trường DB_SOURCE
 	dbSource := os.Getenv("DB_SOURCE")
@@ -65,7 +67,7 @@ func main() {
 	}
 
 	//Chạy server trên cổng 8080
-	addr := ":8080"
+	addr := config.ServerAddress
 	fmt.Printf("Server is running at %s\n", addr)
 	err = server.Start(addr)
 	if err != nil {

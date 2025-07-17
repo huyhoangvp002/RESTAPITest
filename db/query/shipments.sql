@@ -9,7 +9,7 @@ SELECT * FROM shipments WHERE id = $1;
 SELECT * FROM shipments ORDER BY id LIMIT $1 OFFSET $2;
 
 -- name: UpdateShipmentStatus :one
-UPDATE shipments SET status = $2, updated_at = $3 WHERE id = $1 RETURNING *;
+UPDATE shipments SET status = $2, updated_at = $3 WHERE shipment_code = $1 RETURNING *;
 
 -- name: DeleteShipment :exec
 DELETE FROM shipments WHERE id = $1;

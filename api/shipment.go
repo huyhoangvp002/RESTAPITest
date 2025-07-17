@@ -2,11 +2,13 @@ package api
 
 import (
 	db "RESTAPITest/db/sqlc"
+	"RESTAPITest/token"
 	"bytes"
 	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -71,6 +73,18 @@ func (server *Server) CreateShipment(ctx *gin.Context) {
 		return
 	}
 	log.Printf("[INFO] BuyerID: %d", to_id)
+
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	authID, err := server.store.GetAccountIDByUsername(ctx, authPayload.Username)
+	if err != nil {
+		ctx.JSON(statusCodeForError(err), errorResponse(err))
+		return
+	}
+
+	if authID != to_id {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"err": "Permision deny"})
+		return
+	}
 
 	// Fetch seller details
 	seller_name, err := server.store.GetNameForShipment(ctx, from_id)
@@ -151,8 +165,8 @@ func (server *Server) CreateShipment(ctx *gin.Context) {
 		return
 	}
 
-	deliveryAPI_URL := "http://localhost:9999/api/shipment"
-	apiKey := "1183b817ec21e4a8bc2c409cc17135c0"
+	deliveryAPI_URL := server.config.DeliveryAPI_URL
+	apiKey := server.config.APIKey
 
 	httpReq, err := http.NewRequest("POST", deliveryAPI_URL, bytes.NewBuffer(jsonData))
 	if err != nil {
@@ -206,4 +220,33 @@ func (server *Server) CreateShipment(ctx *gin.Context) {
 
 	log.Printf("[INFO] Saved shipment in local DB: %+v", shipment)
 	ctx.JSON(http.StatusOK, shipment)
+}
+
+func (server *Server) WebHook(ctx *gin.Context) {
+	var payload struct {
+		ShipmentCode string `json:"shipment_code"`
+		Status       string `json:"status"`
+		UpdatedAt    string `json:"updated_at"`
+	}
+
+	if err := ctx.ShouldBindJSON(&payload); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
+		return
+	}
+
+	// Log hoặc lưu DB
+	log.Printf("Webhook received: shipment_id=%s, status=%s", payload.ShipmentCode, payload.Status)
+	arg := db.UpdateShipmentStatusParams{
+		ShipmentCode: payload.ShipmentCode,
+		Status:       payload.Status,
+		UpdatedAt:    time.Now(),
+	}
+
+	Status_Update, err := server.store.UpdateShipmentStatus(ctx, arg)
+	if err != nil {
+		ctx.JSON(statusCodeForError(err), errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, Status_Update)
 }
