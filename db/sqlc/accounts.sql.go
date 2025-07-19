@@ -99,6 +99,42 @@ func (q *Queries) GetIDByUserName(ctx context.Context, username string) (int64, 
 	return id, err
 }
 
+const getOrCreateAccount = `-- name: GetOrCreateAccount :one
+WITH existing AS (
+  SELECT a.id, a.username, a.hash_password, a.role
+  FROM accounts AS a
+  WHERE a.username = $1
+),
+inserted AS (
+  INSERT INTO accounts (username, hash_password, role)
+  SELECT $1, '', 'user'
+  WHERE NOT EXISTS (SELECT 1 FROM existing)
+  RETURNING id, username, hash_password, role
+)
+SELECT id, username, hash_password, role FROM inserted
+UNION
+SELECT id, username, hash_password, role FROM existing
+`
+
+type GetOrCreateAccountRow struct {
+	ID           int64  `json:"id"`
+	Username     string `json:"username"`
+	HashPassword string `json:"hash_password"`
+	Role         string `json:"role"`
+}
+
+func (q *Queries) GetOrCreateAccount(ctx context.Context, username string) (GetOrCreateAccountRow, error) {
+	row := q.db.QueryRowContext(ctx, getOrCreateAccount, username)
+	var i GetOrCreateAccountRow
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.HashPassword,
+		&i.Role,
+	)
+	return i, err
+}
+
 const listAccounts = `-- name: ListAccounts :many
 SELECT id, username, hash_password, role, created_at FROM accounts ORDER BY id LIMIT $1 OFFSET $2
 `

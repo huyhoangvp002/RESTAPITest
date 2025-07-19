@@ -43,7 +43,7 @@ func (server *Server) CreateAccount(ctx *gin.Context) {
 
 type loginRequest struct {
 	Username     string `json:"username" binding:"required"`
-	HashPassword string `json:"hash_password" binding:"required,min=6"`
+	HashPassword string `json:"password" binding:"required,min=6"`
 }
 
 type loginResponse struct {
@@ -83,6 +83,16 @@ func (server *Server) Login(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
+
+	ctx.SetCookie(
+		"access_token", // tên cookie
+		loginToken,     // giá trị: JWT
+		int(server.config.AccessTokenDuration.Seconds()), // thời gian sống
+		"/",   // path
+		"",    //
+		false, // secure
+		false, //
+	)
 
 	rsp := loginResponse{
 		LoginToken: loginToken,
@@ -243,4 +253,11 @@ func (server *Server) DeleteAccount(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{"msg": "Delete Successfully"})
 
+}
+
+func (server *Server) LogOut(ctx *gin.Context) {
+	ctx.SetCookie(
+		"access_token", "", -1, "/", "", false, true,
+	)
+	ctx.JSON(http.StatusOK, gin.H{"msg": "see you again"})
 }

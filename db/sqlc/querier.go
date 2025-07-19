@@ -10,6 +10,7 @@ import (
 )
 
 type Querier interface {
+	CheckEmailExists(ctx context.Context, email string) (bool, error)
 	CreateAccount(ctx context.Context, arg CreateAccountParams) (Account, error)
 	CreateAccountInfo(ctx context.Context, arg CreateAccountInfoParams) (AccountInfo, error)
 	CreateCartItem(ctx context.Context, arg CreateCartItemParams) (CartItem, error)
@@ -31,6 +32,7 @@ type Querier interface {
 	GetAccountByUsername(ctx context.Context, username string) (Account, error)
 	GetAccountID(ctx context.Context, id int64) (int64, error)
 	GetAccountIDByCartItemID(ctx context.Context, id int64) (int64, error)
+	GetAccountIDByEmail(ctx context.Context, email string) (int64, error)
 	GetAccountIDByUsername(ctx context.Context, username string) (int64, error)
 	GetAccountIDbyProductID(ctx context.Context, id int64) (int64, error)
 	GetAccountInfo(ctx context.Context, id int64) (AccountInfo, error)
@@ -43,6 +45,7 @@ type Querier interface {
 	GetDiscountPriceByID(ctx context.Context, id int64) (int32, error)
 	GetIDByUserName(ctx context.Context, username string) (int64, error)
 	GetNameForShipment(ctx context.Context, accountID int64) (string, error)
+	GetOrCreateAccount(ctx context.Context, username string) (GetOrCreateAccountRow, error)
 	GetOrder(ctx context.Context, id int64) (Order, error)
 	GetOrderItem(ctx context.Context, id int64) (OrderItem, error)
 	GetPhoneForShipment(ctx context.Context, accountID int64) (string, error)

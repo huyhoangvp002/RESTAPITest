@@ -22,3 +22,5 @@ SELECT buyer_id FROM orders WHERE id = $1;
 
 -- name: GetTotalPriceByID :one
 SELECT total_price FROM orders WHERE id = $1;
+
+

@@ -1,9 +1,9 @@
 package util
 
 const (
-	D = "dealer"
+	D = "buyer"
 	A = "admin"
-	C = "customer"
+	C = "seller"
 )
 
 func IsValidRole(role string) bool {

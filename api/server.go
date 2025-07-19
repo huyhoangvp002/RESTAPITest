@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -39,12 +40,17 @@ func NewServer(config util.Config, store db.Querier) (*Server, error) {
 }
 
 func (server *Server) setUpRouter() {
-
 	router := gin.Default()
+	router.Static("/static", "./static")
+	router.Use(cors.Default())
+
 	router.POST("/login", server.Login)
 	router.POST("/signup", server.CreateAccount)
 
 	router.GET("/products", server.SearchProductByName)
+	router.GET("/auth/google/login", server.HandleGoogleLogin)
+	router.GET("/auth/google/callback", server.HandleGoogleCallback)
+
 	router.POST("/api/webhook", server.WebHook)
 
 	authRoutes := router.Group("/").Use(authMiddleware(server.tokenMaker))
@@ -57,6 +63,7 @@ func (server *Server) setUpRouter() {
 	authRoutes.POST("/cart/add", roleMiddleware("admin", "customer"), server.AddToCart)
 	authRoutes.POST("/orders", server.CreateOrder)
 	authRoutes.POST("/shipments", server.CreateShipment)
+	authRoutes.POST("/logout", server.LogOut)
 
 	authRoutes.GET("/products/:id", server.GetProduct)
 	authRoutes.GET("/products/categories", server.GetProductByCate)

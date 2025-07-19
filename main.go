@@ -66,6 +66,10 @@ func main() {
 		log.Fatal("cannot create server:", err)
 	}
 
+	fmt.Println("Redirect URL:", os.Getenv("GOOGLE_REDIRECT_URL"))
+	fmt.Println("Client ID:", os.Getenv("GOOGLE_CLIENT_ID"))
+	fmt.Println("Client secret:", os.Getenv("GOOGLE_CLIENT_SECRET"))
+
 	//Chạy server trên cổng 8080
 	addr := config.ServerAddress
 	fmt.Printf("Server is running at %s\n", addr)

@@ -53,3 +53,11 @@ SELECT phone_number FROM account_info WHERE account_id = $1;
 -- name: GetAddressForShipment :one
 SELECT address FROM account_info WHERE account_id = $1;
 
+-- name: CheckEmailExists :one
+SELECT EXISTS (
+  SELECT 1 FROM account_info WHERE email = $1
+) AS exists;
+
+-- name: GetAccountIDByEmail :one
+SELECT account_id FROM account_info WHERE email =$1;
+

@@ -1,0 +1,241 @@
+    <!DOCTYPE html>
+    <html lang="vi">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Trang Chủ - Đăng Nhập Thành Công</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: 'Arial', sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .container {
+                background: white;
+                padding: 2rem;
+                border-radius: 20px;
+                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+                text-align: center;
+                max-width: 500px;
+                width: 90%;
+            }
+
+            .welcome-title {
+                color: #333;
+                font-size: 2rem;
+                margin-bottom: 1rem;
+                font-weight: 700;
+            }
+
+            .user-info {
+                background: #f8f9fa;
+                padding: 1.5rem;
+                border-radius: 10px;
+                margin: 1.5rem 0;
+                border-left: 4px solid #667eea;
+            }
+
+            .user-info h3 {
+                color: #667eea;
+                margin-bottom: 0.5rem;
+            }
+
+            .user-info p {
+                color: #666;
+                font-size: 1.1rem;
+            }
+
+            .btn {
+                background: linear-gradient(45deg, #667eea, #764ba2);
+                color: white;
+                padding: 12px 30px;
+                border: none;
+                border-radius: 25px;
+                font-size: 1rem;
+                cursor: pointer;
+                transition: transform 0.3s ease;
+                margin: 0.5rem;
+            }
+
+            .btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            }
+
+            .btn-logout {
+                background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            }
+
+            .status {
+                padding: 1rem;
+                border-radius: 8px;
+                margin-bottom: 1rem;
+            }
+
+            .status.success {
+                background: #d4edda;
+                color: #155724;
+                border: 1px solid #c3e6cb;
+            }
+
+            .status.error {
+                background: #f8d7da;
+                color: #721c24;
+                border: 1px solid #f5c6cb;
+            }
+
+            .loading {
+                color: #667eea;
+                font-style: italic;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1 class="welcome-title">🎉 Chào Mừng!</h1>
+            
+            <div id="status" class="status loading">
+                Đang kiểm tra thông tin đăng nhập...
+            </div>
+
+            <div id="user-info" class="user-info" style="display: none;">
+                <h3>Thông Tin Tài Khoản</h3>
+                <p id="username">Đang tải...</p>
+                <p id="role">Đang tải...</p>
+            </div>
+
+            <div style="margin-top: 2rem;">
+                <button class="btn" onclick="goToProducts()">📦 Xem Sản Phẩm</button>
+                <button class="btn" onclick="goToProfile()">👤 Hồ Sơ</button>
+                <button class="btn btn-logout" onclick="logout()">🚪 Đăng Xuất</button>
+            </div>
+        </div>
+
+        <script>
+            // Hàm đọc cookie
+            function getCookie(name) {
+                const value = `; ${document.cookie}`;
+                const parts = value.split(`; ${name}=`);
+                if (parts.length === 2) return parts.pop().split(';').shift();
+            }
+
+            // Hàm decode JWT payload (simple decode, không verify signature)
+            function decodeJWT(token) {
+                try {
+                    const base64Url = token.split('.')[1];
+                    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                    }).join(''));
+                    return JSON.parse(jsonPayload);
+                } catch (e) {
+                    console.error('Lỗi decode JWT:', e);
+                    return null;
+                }
+            }
+
+            // Kiểm tra authentication khi load trang
+            window.onload = function() {
+                let token = getCookie('access_token');
+                console.log('111111', token)
+                const statusDiv = document.getElementById('status');
+                const userInfoDiv = document.getElementById('user-info');
+
+                // ✅ Fallback: lấy token từ URL nếu không có trong cookie
+                // if (!token) {
+                //     const urlParams = new URLSearchParams(window.location.search);
+                //     token = urlParams.get('token');
+                //     console.log('lost token')
+                //     if (token) {
+                //         console.log('🔍 Token found in URL, setting cookie...');
+                //         document.cookie = `access_token=${token}; path=/; max-age=3600`;
+
+                //     }
+                // }
+
+                if (!token) {
+                    statusDiv.className = 'status error';
+                    statusDiv.innerHTML = '❌ Không tìm thấy token đăng nhập. <a href="/static/login.html">Đăng nhập lại</a>';
+                    return;
+                }
+
+                // Decode JWT để lấy thông tin user
+                const payload = decodeJWT(token);
+                
+                if (payload) {
+                    // Kiểm tra token có hết hạn không
+                    const now = Math.floor(Date.now() / 1000);
+                    if (payload.exp && payload.exp < now) {
+                        statusDiv.className = 'status error';
+                        statusDiv.innerHTML = '⏰ Token đã hết hạn. <a href="/auth/google/login">Đăng nhập lại</a>';
+                        return;
+                    }
+
+                    // Hiển thị thông tin thành công
+                    statusDiv.className = 'status success';
+                    statusDiv.innerHTML = '✅ Đăng nhập thành công!';
+
+                    // Hiển thị thông tin user
+                    userInfoDiv.style.display = 'block';
+                    document.getElementById('username').textContent = `👤 Username: ${payload.username || 'N/A'}`;
+                    document.getElementById('role').textContent = `🏷️ Vai trò: ${payload.role || 'N/A'}`;
+
+                    console.log('Thông tin JWT:', payload);
+                } else {
+                    statusDiv.className = 'status error';
+                    statusDiv.innerHTML = '❌ Token không hợp lệ. <a href="/auth/google/login">Đăng nhập lại</a>';
+                }
+            }
+
+            // Các hàm navigation
+            function goToProducts() {
+                window.location.href = '/products.html';
+            }
+
+            function goToProfile() {
+                window.location.href = '/profile.html';
+            }
+
+            function logout() {
+                // Xóa cookie
+                document.cookie = 'access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                
+                // Redirect về trang login
+                alert('Đăng xuất thành công!');
+                window.location.href = '/static/login.html';
+            }
+
+            // Test function
+            function testAPI() {
+                const token = getCookie('access_token');
+                
+                fetch('/api/test', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('API Response:', data);
+                    alert('API Test thành công! Xem console để biết chi tiết.');
+                })
+                .catch(error => {
+                    console.error('API Error:', error);
+                    alert('API Test thất bại! Xem console để biết chi tiết.');
+                });
+            }
+        </script>
+    </body>
+    </html> 

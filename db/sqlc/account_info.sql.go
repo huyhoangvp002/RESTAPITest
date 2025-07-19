@@ -10,6 +10,19 @@ import (
 	"time"
 )
 
+const checkEmailExists = `-- name: CheckEmailExists :one
+SELECT EXISTS (
+  SELECT 1 FROM account_info WHERE email = $1
+) AS exists
+`
+
+func (q *Queries) CheckEmailExists(ctx context.Context, email string) (bool, error) {
+	row := q.db.QueryRowContext(ctx, checkEmailExists, email)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const createAccountInfo = `-- name: CreateAccountInfo :one
 INSERT INTO account_info (
   name,
@@ -64,6 +77,17 @@ SELECT account_id FROM account_info WHERE id = $1
 
 func (q *Queries) GetAccountID(ctx context.Context, id int64) (int64, error) {
 	row := q.db.QueryRowContext(ctx, getAccountID, id)
+	var account_id int64
+	err := row.Scan(&account_id)
+	return account_id, err
+}
+
+const getAccountIDByEmail = `-- name: GetAccountIDByEmail :one
+SELECT account_id FROM account_info WHERE email =$1
+`
+
+func (q *Queries) GetAccountIDByEmail(ctx context.Context, email string) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getAccountIDByEmail, email)
 	var account_id int64
 	err := row.Scan(&account_id)
 	return account_id, err
