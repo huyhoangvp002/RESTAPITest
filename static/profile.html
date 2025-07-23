@@ -33,7 +33,7 @@
             <div class="nav-links">
                 <a href="/static/home.html">🏠 Trang chủ</a>
                 <a href="/static/products.html">🛒 Sản phẩm</a>
-                <a href="/static/info.html">✏️ Sửa thông tin</a>
+                <a href="/static/info_change.html">✏️ Sửa thông tin</a>
                 <button onclick="logout()" class="btn btn-danger">🚪 Đăng xuất</button>
             </div>
         </div>
@@ -133,111 +133,16 @@
         }
 
         async function loadProfile() {
-            const token = getCookie("access_token");
-            
-            if (!token) {
-                showError("⚠️ Bạn phải đăng nhập trước!");
-                return;
-            }
-
-            // Parse JWT to get username
-            const payload = parseJWT(token);
-            if (!payload || !payload.username) {
-                showError("❌ Token không hợp lệ. Vui lòng đăng nhập lại!");
-                return;
-            }
-
-            try {
-                // Get basic account info using /account/list endpoint with cookie auth
-                const response = await fetch('/profile', {
-                    method: 'GET',
-                    headers: { 
-                        'Content-Type': 'application/json' 
-                    },
-                    credentials: 'include' // Use cookie authentication
-                });
-
-                if (!response.ok) {
-                    if (response.status === 401) {
-                        showError("🔒 Phiên đăng nhập đã hết hạn!");
-                        return;
-                    }
-                    throw new Error(`HTTP ${response.status}`);
-                }
-
-                const responseData = await response.json();
-                console.log("✅ Raw response received:", responseData);
-                
-                // Handle different response types
-                let account;
-                if (Array.isArray(responseData)) {
-                    // Admin gets array of accounts, we want the current user's account
-                    account = responseData.find(acc => acc.username === payload.username) || responseData[0];
-                } else {
-                    // Regular user gets single account object
-                    account = responseData;
-                }
-                
-                console.log("✅ Selected account:", account);
-                
-                // Load additional account info - backend route is now GET /account_info/:id
-                let accountInfo = null;
-                
-                // Try different ID approaches since backend expects account_info primary key ID
-                const attempts = [
-                    { id: account.id, desc: "Using account.id" },
-                    { id: 1, desc: "Trying account_info ID 1" },
-                    { id: 2, desc: "Trying account_info ID 2" },
-                    { id: 3, desc: "Trying account_info ID 3" },
-                    { id: 4, desc: "Trying account_info ID 4" },
-                    { id: 5, desc: "Trying account_info ID 5" }
-                ];
-
-                for (const attempt of attempts) {
-                    if (!attempt.id) continue;
-                    
-                    try {
-                        console.log(`🌐 ${attempt.desc}: /account_info/${attempt.id}`);
-                        const infoResponse = await fetch(`/account_info/${attempt.id}`, {
-                            method: 'GET',
-                            headers: { 
-                                'Content-Type': 'application/json' 
-                            },
-                            credentials: 'include'
-                        });
-                        
-                        if (infoResponse.ok) {
-                            accountInfo = await infoResponse.json();
-                            console.log(`✅ SUCCESS with ${attempt.desc}:`, accountInfo);
-                            break; // Exit loop on success
-                        } else {
-                            console.log(`❌ ${attempt.desc} failed: ${infoResponse.status}`);
-                        }
-                    } catch (err) {
-                        console.log(`❌ ${attempt.desc} error:`, err);
-                    }
-                }
-                
-                if (!accountInfo) {
-                    console.warn('❌ All account_info attempts failed');
-                }
-
-                // Combine account and account_info data
-                const combinedData = {
-                    username: account.username || payload.username,
-                    role: account.role || payload.role,
-                    email: accountInfo?.email || "Chưa cập nhật",
-                    name: accountInfo?.name || "Chưa cập nhật", 
-                    phone_number: accountInfo?.phone_number || "Chưa cập nhật",
-                    address: accountInfo?.address || "Chưa cập nhật",
-                    created_at: account.created_at
-                };
-
-                displayProfile(combinedData);
-
-            } catch (error) {
-                console.error('Error loading profile:', error);
-                showError(`❌ Đã có lỗi xảy ra: ${error.message}`);
+            const res = await fetch('/profile', {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
+            if (res.ok) {
+                const info = await res.json();
+                displayProfile(info); // <-- Thêm dòng này!
+            } else {
+                showError("Không thể tải thông tin cá nhân!");
             }
         }
 

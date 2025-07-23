@@ -127,15 +127,10 @@ func (server *Server) Login(ctx *gin.Context) {
 }
 
 func (server *Server) GetAccountByUsername(ctx *gin.Context) {
-	var req loginRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
 
-	// authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
 
-	account, err := server.store.GetAccountByUsername(ctx, req.Username)
+	account, err := server.store.GetAccountByUsername(ctx, authPayload.Username)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))

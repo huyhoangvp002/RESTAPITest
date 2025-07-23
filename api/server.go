@@ -79,7 +79,7 @@ func (server *Server) setUpRouter() {
 
 	authRoutes.PATCH("/products/:id", server.UdateProduct)
 	authRoutes.PATCH("/cart/:id", server.UpdateProductInCart)
-	authRoutes.PATCH("/account_info/:id", server.UpdateAccountInfo)
+	authRoutes.PATCH("/account_info", server.UpdateAccountInfo)
 
 	authRoutes.DELETE("/account:id", server.DeleteAccount)
 	authRoutes.DELETE("/cart/:id", server.DeleteCart)

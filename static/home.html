@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trang Chủ - Đăng Nhập Thành Công</title>
+    <title>Trang Chủ - Dashboard</title>
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
     <div class="page-container">
         <div class="card large">
-            <h1 class="welcome-title">🎉 Chào mừng bạn!</h1>
-            <p class="subtitle">Đăng nhập thành công vào hệ thống</p>
+            <h1 class="welcome-title">🎉 Chào mừng trở lại!</h1>
             
             <div class="user-info">
                 <h3>📋 Thông tin tài khoản</h3>
@@ -20,21 +19,88 @@
                 <p><strong>🏠 Địa chỉ:</strong> <span id="address">Đang tải...</span></p>
                 <p><strong>👥 Vai trò:</strong> <span id="role">Đang tải...</span></p>
             </div>
-            
-            <div class="nav-links">
-                <a href="/static/products.html" class="btn btn-primary">🛒 Xem sản phẩm</a>
-                <a href="/static/profile.html" class="btn btn-secondary">⚙️ Cài đặt</a>
-                <button onclick="logout()" class="btn btn-danger">🚪 Đăng xuất</button>
+
+
+            <!-- Nút quản trị, chỉ hiện khi là admin -->
+            <div id="admin-actions" style="display:none; margin: 32px 0 0 0; text-align:center;">
+                <h3 style="color:#7f53ac; font-size:1.15em; margin-bottom:18px;">🔑 Chức năng quản trị</h3>
+                <div style="display:flex; flex-wrap:wrap; gap:16px; justify-content:center;">
+                    <a href="/static/admin_accounts.html" class="btn btn-admin" style="background:#4b79a1; color:#fff; font-weight:600; border-radius:14px; padding:16px 32px; font-size:1.08em;">👥 Quản lý tài khoản</a>
+                    <a href="/static/admin_categories.html" class="btn btn-admin" style="background:#43cea2; color:#fff; font-weight:600; border-radius:14px; padding:16px 32px; font-size:1.08em;">📂 Quản lý danh mục</a>
+                    <a href="/static/admin_products.html" class="btn btn-admin" style="background:#ff9966; color:#fff; font-weight:600; border-radius:14px; padding:16px 32px; font-size:1.08em;">🛒 Quản lý sản phẩm</a>
+                    <button onclick="logout()" class="btn btn-danger main-action-btn" style="background: #e74c3c; color: #fff; font-size: 1.1em; font-weight: bold; border-radius: 16px; padding: 16px 32px; box-shadow: 0 2px 8px rgba(231,76,60,0.15); border: none; transition: 0.2s;">
+                        🚪 Đăng xuất
+                    </button>
+                </div>
+            </div>
+
+            <!-- Nút dành cho buyer, chỉ hiện khi KHÔNG phải admin -->
+            <div id="buyer-actions" style="display:none;">
+                <div class="nav-links" style="display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; margin-top: 32px;">
+                    <a href="/static/products.html" class="btn btn-primary main-action-btn" style="background: linear-gradient(90deg, #7f53ac 0%, #647dee 100%); color: #fff; font-size: 1.15em; font-weight: bold; box-shadow: 0 4px 16px rgba(100,100,200,0.12); border-radius: 16px; padding: 18px 36px; transition: 0.2s;">
+                        🛍️ Mua sắm ngay
+                    </a>
+                    <a href="/static/profile.html" class="btn btn-secondary main-action-btn" style="background: #3b3b3b; color: #fff; font-size: 1.1em; font-weight: 500; border-radius: 16px; padding: 16px 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.10); transition: 0.2s;">
+                        👤 Thông tin cá nhân
+                    </a>
+                    <button onclick="logout()" class="btn btn-danger main-action-btn" style="background: #e74c3c; color: #fff; font-size: 1.1em; font-weight: bold; border-radius: 16px; padding: 16px 32px; box-shadow: 0 2px 8px rgba(231,76,60,0.15); border: none; transition: 0.2s;">
+                        🚪 Đăng xuất
+                    </button>
+                </div>
+            </div>
+
+            <style>
+                .main-action-btn:hover {
+                    filter: brightness(1.08) drop-shadow(0 2px 8px rgba(100,100,200,0.10));
+                    transform: translateY(-2px) scale(1.03);
+                    opacity: 0.95;
+                }
+                .btn-danger.main-action-btn:hover {
+                    background: #c0392b;
+                }
+                .btn-primary.main-action-btn:hover {
+                    background: linear-gradient(90deg, #6a3093 0%, #a044ff 100%);
+                }
+                .btn-secondary.main-action-btn:hover {
+                    background: #444;
+                    color: #fff;
+                }
+                .btn-admin:hover {
+                    filter: brightness(1.08) drop-shadow(0 2px 8px rgba(100,100,200,0.10));
+                    transform: translateY(-2px) scale(1.03);
+                    opacity: 0.95;
+                }
+            </style>
+        </div>
+
+        <!-- Notifications will be inserted here -->
+        <div id="notifications"></div>
+
+        <!-- Modal xác nhận đăng xuất -->
+        <div id="logout-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.25); z-index:9999; align-items:center; justify-content:center;">
+            <div style="background:#fff; border-radius:16px; box-shadow:0 8px 32px rgba(0,0,0,0.18); padding:32px 28px; min-width:320px; max-width:90vw; text-align:center;">
+                <div style="font-size:2em; margin-bottom:12px;">⚠️</div>
+                <div style="font-size:1.15em; font-weight:500; margin-bottom:24px;">Bạn có chắc chắn muốn đăng xuất không?</div>
+                <button id="modal-logout-confirm" class="btn btn-danger" style="margin-right:16px; min-width:100px;">Đồng ý</button>
+                <button id="modal-logout-cancel" class="btn btn-secondary" style="min-width:100px;">Hủy</button>
             </div>
         </div>
     </div>
 
     <script>
+        // Utility functions
         function getCookie(name) {
-            return document.cookie.split("; ").reduce((r, v) => {
+            console.log("🍪 Tìm cookie:", name);
+            console.log("🍪 Tất cả cookies:", document.cookie);
+            
+            const result = document.cookie.split("; ").reduce((r, v) => {
                 const parts = v.split("=");
+                console.log("🍪 Cookie part:", parts[0], "=", parts[1]);
                 return parts[0] === name ? decodeURIComponent(parts[1]) : r;
             }, "");
+            
+            console.log("🍪 Kết quả tìm cookie", name + ":", result);
+            return result;
         }
 
         function setCookie(name, value, days) {
@@ -46,216 +112,348 @@
             document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         }
 
-        function logout() {
-            if (confirm("🤔 Bạn có chắc chắn muốn đăng xuất?")) {
-                deleteCookie("access_token");
-                deleteCookie("refresh_token");
-                deleteCookie("cart");
-                alert("👋 Đã đăng xuất thành công!");
-                window.location.href = "/static/landing_page.html";
-            }
-        }
-
-        // Simple JWT payload decoder (without verification)
         function parseJWT(token) {
             try {
-                const base64Url = token.split('.')[1];
+                // Check if token has 3 parts (header.payload.signature)
+                const parts = token.split('.');
+                if (parts.length !== 3) {
+                    console.error('❌ Token không có đúng 3 phần:', parts.length);
+                    return null;
+                }
+                
+                const base64Url = parts[1]; // payload part
                 const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                
+                // Add padding if needed
+                const padded = base64 + '='.repeat((4 - base64.length % 4) % 4);
+                
+                const jsonPayload = decodeURIComponent(atob(padded).split('').map(function(c) {
                     return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
                 }).join(''));
-                return JSON.parse(jsonPayload);
+                
+                const payload = JSON.parse(jsonPayload);
+                console.log('✅ Parsed JWT payload:', payload);
+                
+                // Check if token is expired
+                if (payload.expired_at) {
+                    const expiredAt = new Date(payload.expired_at);
+                    if (new Date() > expiredAt) {
+                        console.error('❌ Token đã hết hạn:', expiredAt);
+                        return null;
+                    }
+                }
+                
+                return payload;
             } catch (e) {
-                console.error('Error parsing JWT:', e);
+                console.error('❌ Lỗi phân tích JWT:', e);
+                console.error('❌ Token value:', token);
                 return null;
             }
         }
 
-        async function loadUserInfo() {
-            const token = getCookie("access_token");
-            if (!token) {
-                alert("⚠️ Vui lòng đăng nhập lại!");
-                window.location.href = "/static/login.html";
-                return;
-            }
-
-            console.log("🔑 Token found:", token ? "Yes" : "No");
+        function showNotification(message, type = 'success') {
+            const notifications = document.getElementById('notifications');
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type}`;
+            notification.innerHTML = `
+                <strong>${type === 'success' ? '✅' : type === 'warning' ? '⚠️' : '❌'}</strong>
+                ${message}
+                <button onclick="this.parentElement.remove()" style="float: right;">✖</button>
+            `;
+            notifications.appendChild(notification);
             
-            // Parse JWT to get username
-            const payload = parseJWT(token);
-            if (!payload || !payload.username) {
-                alert("❌ Token không hợp lệ. Vui lòng đăng nhập lại!");
-                window.location.href = "/static/login.html";
-                return;
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        function updateElement(elementId, value) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.textContent = value;
             }
+        }
 
-            console.log("👤 Username from token:", payload.username);
-            console.log("🌐 Using cookie authentication (not Bearer token)");
-
+        async function testConnection() {
             try {
-                // Backend uses cookie authentication, not Bearer token
-                // Use /account/list endpoint which returns current user's account for non-admin users
-                console.log("🌐 Calling API: /account/list");
+                console.log("🌐 Test kết nối server...");
+                const res = await fetch("/products?page_id=1&page_size=5", {
+                    method: "GET",
+                    headers: { "Content-Type": "application/json" }
+                });
                 
-                const res = await fetch("/account/list?page_id=1&page_size=5", {
+                if (res.ok) {
+                    console.log("✅ Server hoạt động tốt");
+                    return true;
+                } else {
+                    console.log("⚠️ Server phản hồi nhưng có lỗi:", res.status);
+                    // Even if products endpoint has errors, server is still running
+                    return true;
+                }
+            } catch (error) {
+                console.error("❌ Không thể kết nối server:", error);
+                showNotification("Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.", 'error');
+                return false;
+            }
+        }
+
+        async function loadAccountData() {
+            console.log("🌐 Gọi API: /accounts để lấy thông tin user");
+            
+            try {
+                const res = await fetch("/accounts", {
                     method: "GET",
                     headers: { 
                         "Content-Type": "application/json"
                     },
-                    credentials: 'include' // Include cookies for authentication
+                    credentials: 'include'
                 });
 
-                console.log("📡 Response status:", res.status);
+                console.log("📡 /accounts response status:", res.status);
 
-                if (!res.ok) {
+                if (res.ok) {
+                    const accountData = await res.json();
+                    console.log("✅ Account data from /accounts:", accountData);
+                    
+                    // Update account info from API response
+                    updateElement("username", accountData.username || "N/A");
+                    updateElement("role", accountData.role || "User");
+                    
+                    return accountData;
+                } else {
                     const errorText = await res.text();
-                    console.error("❌ API Error:", res.status, errorText);
+                    console.error("❌ /accounts API Error:", res.status, errorText);
                     
                     if (res.status === 401) {
-                        alert("🔒 Token đã hết hạn. Vui lòng đăng nhập lại!");
-                        deleteCookie("access_token");
-                        deleteCookie("refresh_token");
-                        window.location.href = "/static/login.html";
-                        return;
+                        throw new Error("Authentication failed");
                     }
                     
                     throw new Error(`HTTP ${res.status}: ${errorText}`);
                 }
-
-                const response = await res.json();
-                console.log("✅ Raw response received:", response);
-                console.log("✅ Response type:", Array.isArray(response) ? "Array" : "Object");
-                
-                // Handle different response types
-                let user;
-                if (Array.isArray(response)) {
-                    // Admin gets array of accounts, we want the current user's account
-                    user = response.find(acc => acc.username === payload.username) || response[0];
-                    console.log("✅ Selected user from array:", user);
-                } else {
-                    // Regular user gets single account object
-                    user = response;
-                    console.log("✅ Single user object:", user);
-                }
-                
-                // Display basic account info
-                document.getElementById("username").textContent = user.username || payload.username;
-                document.getElementById("email").textContent = "Đang tải...";
-                document.getElementById("phone").textContent = "Đang tải...";
-                document.getElementById("address").textContent = "Đang tải...";
-                document.getElementById("role").textContent = user.role || payload.role || "User";
-                
-                console.log("🔍 User object keys:", Object.keys(user));
-                console.log("🔍 User ID for account_info:", user.id);
-                console.log("🔍 User full object:", JSON.stringify(user, null, 2));
-                
-                // Load additional account info using token authentication
-                await loadAccountInfo(token, user.id);
-                
             } catch (error) {
-                console.error("💥 Error loading user info:", error);
-                
-                // Show detailed error message
-                const errorMsg = error.message || "Lỗi không xác định";
-                document.getElementById("username").textContent = `❌ ${errorMsg}`;
-                document.getElementById("email").textContent = "Không thể tải";
-                document.getElementById("phone").textContent = "Không thể tải";
-                document.getElementById("address").textContent = "Không thể tải";
-                document.getElementById("role").textContent = "Không thể tải";
-                
-                // Show user-friendly alert
-                alert(`❌ Không thể tải thông tin tài khoản:\n${errorMsg}\n\nVui lòng kiểm tra kết nối mạng hoặc đăng nhập lại.`);
+                console.error("💥 Lỗi gọi /accounts:", error);
+                throw error;
             }
         }
 
-        // Load additional account info (name, email, phone, address)
-        // Backend uses token authentication, so we don't need to pass ID in URL
-        async function loadAccountInfo(token, accountId) {
-            console.log(`🔍 loadAccountInfo called - using token auth (not URL params)`);
+        async function loadUserInfo() {
+            // Test connection first
+            const serverOk = await testConnection();
+            if (!serverOk) {
+                updateElement("username", "❌ Lỗi kết nối");
+                updateElement("email", "❌ Lỗi kết nối");
+                updateElement("phone", "❌ Lỗi kết nối");
+                updateElement("address", "❌ Lỗi kết nối");
+                updateElement("role", "❌ Lỗi kết nối");
+                return;
+            }
+
+            const token = getCookie("access_token");
+            
+            // Check for invalid token values
+            if (!token || token === "undefined" || token === "null" || token.length < 20) {
+                console.log("❌ Token không hợp lệ hoặc chưa login:", token);
+                
+                showNotification("Bạn chưa đăng nhập. Đang chuyển hướng đến trang đăng nhập...", 'warning');
+                
+                setTimeout(() => {
+                    window.location.href = "/static/login.html";
+                }, 2000);
+                return;
+            }
+
+            console.log("🔑 Đã tìm thấy token hợp lệ, độ dài:", token.length);
+            console.log("🔑 Token preview:", token.substring(0, 50) + "...");
+            
+            const payload = parseJWT(token);
+            if (!payload) {
+                showNotification("Token không hợp lệ (JWT parse failed). Vui lòng đăng nhập lại!", 'error');
+                deleteCookie("access_token");
+                deleteCookie("refresh_token");
+                setTimeout(() => {
+                    window.location.href = "/static/login.html";
+                }, 2000);
+                return;
+            }
+
+            console.log("👤 Username từ token:", payload.username);
+            console.log("👥 Role từ token:", payload.role);
+
+            try {
+                // Load account data from /accounts endpoint (uses token automatically)
+                await loadAccountData();
+                
+                // Then load additional account info from /profile endpoint
+                await loadAccountInfo();
+
+                // Đảm bảo DOM đã có các khối này
+                const adminDiv = document.getElementById('admin-actions');
+                const buyerDiv = document.getElementById('buyer-actions');
+                console.log('ROLE:', payload.role);
+                console.log('adminDiv:', adminDiv, 'buyerDiv:', buyerDiv);
+
+                // Hiện nút admin nếu role là admin, ngược lại chỉ hiện buyer
+                if ((payload.role || '').toLowerCase().trim() === 'admin') {
+                    if (adminDiv) adminDiv.style.display = 'block';
+                    if (buyerDiv) {
+                        buyerDiv.style.display = 'none';
+                        // Force ẩn tất cả con của buyer-actions
+                        Array.from(buyerDiv.children).forEach(e => e.style.display = 'none');
+                    }
+                    console.log('🔑 ĐÃ ẨN buyer-actions, CHỈ HIỆN admin-actions');
+                } else {
+                    if (adminDiv) adminDiv.style.display = 'none';
+                    if (buyerDiv) {
+                        buyerDiv.style.display = 'block';
+                        Array.from(buyerDiv.children).forEach(e => e.style.display = '');
+                    }
+                    console.log('🛒 ĐÃ ẨN admin-actions, CHỈ HIỆN buyer-actions');
+                }
+                
+            } catch (error) {
+                console.error("💥 Lỗi tải thông tin từ /accounts, fallback to token:", error);
+                
+                // Fallback: display basic info from JWT token
+                updateElement("username", payload.username || "N/A");
+                updateElement("role", payload.role || "User");
+                
+                try {
+                    // Still try to load account info
+                    await loadAccountInfo();
+                    // Không show notification khi chỉ là fallback
+                } catch (profileError) {
+                    console.error("💥 Cả /accounts và /profile đều lỗi:", profileError);
+                    showNotification("Đã tải thông tin cơ bản từ token. Một số thông tin chi tiết có thể chưa đầy đủ.", 'warning');
+                }
+            }
+        }
+
+        async function loadAccountInfo() {
+            console.log("🔍 Tải thông tin chi tiết tài khoản...");
             
             try {
-                console.log(`🌐 Calling API: /account_info (token-based authentication)`);
-                
                 const res = await fetch('/profile', {
                     method: "GET",
                     headers: { "Content-Type": "application/json" },
-                    credentials: 'include' // Uses cookie authentication
+                    credentials: 'include'
                 });
 
-                console.log(`📡 Response status: ${res.status}`);
+                console.log(`📡 Trạng thái phản hồi account info: ${res.status}`);
 
                 if (res.ok) {
                     const accountInfo = await res.json();
-                    console.log(`✅ SUCCESS with token-based auth:`, accountInfo);
+                    console.log("✅ Thông tin chi tiết:", accountInfo);
                     
-                    document.getElementById("email").textContent = accountInfo.email || "Chưa cập nhật";
-                    document.getElementById("phone").textContent = accountInfo.phone_number || "Chưa cập nhật"; 
-                    document.getElementById("address").textContent = accountInfo.address || "Chưa cập nhật";
-                    return;
+                    updateElement("email", accountInfo.email || "Chưa cập nhật");
+                    updateElement("phone", accountInfo.phone_number || "Chưa cập nhật");
+                    updateElement("address", accountInfo.address || "Chưa cập nhật");
                 } else {
                     const errorText = await res.text();
-                    console.error(`❌ Token-based account_info failed: ${res.status} - ${errorText}`);
+                    console.error(`❌ Lỗi tải account info: ${res.status} - ${errorText}`);
                     
                     if (res.status === 404) {
-                        document.getElementById("email").textContent = "📝 Chưa tạo account info";
-                        document.getElementById("phone").textContent = "📝 Chưa tạo account info";
-                        document.getElementById("address").textContent = "📝 Chưa tạo account info";
+                        updateElement("email", "📝 Chưa thiết lập");
+                        updateElement("phone", "📝 Chưa thiết lập");
+                        updateElement("address", "📝 Chưa thiết lập");
+                        
+                        showNotification("Bạn chưa thiết lập thông tin cá nhân. Hãy cập nhật ngay!", 'warning');
                     } else if (res.status === 401 || res.status === 403) {
-                        document.getElementById("email").textContent = "🔒 Không có quyền truy cập";
-                        document.getElementById("phone").textContent = "🔒 Không có quyền truy cập";
-                        document.getElementById("address").textContent = "🔒 Không có quyền truy cập";
+                        updateElement("email", "🔒 Không có quyền");
+                        updateElement("phone", "🔒 Không có quyền");
+                        updateElement("address", "🔒 Không có quyền");
                     } else {
-                        document.getElementById("email").textContent = `❌ Lỗi ${res.status}`;
-                        document.getElementById("phone").textContent = `❌ Lỗi ${res.status}`;
-                        document.getElementById("address").textContent = `❌ Lỗi ${res.status}`;
+                        updateElement("email", `❌ Lỗi ${res.status}`);
+                        updateElement("phone", `❌ Lỗi ${res.status}`);
+                        updateElement("address", `❌ Lỗi ${res.status}`);
                     }
                 }
             } catch (error) {
-                console.error("❌ Error loading account info:", error);
-                document.getElementById("email").textContent = "❌ Lỗi kết nối";
-                document.getElementById("phone").textContent = "❌ Lỗi kết nối";
-                document.getElementById("address").textContent = "❌ Lỗi kết nối";
+                console.error("❌ Lỗi kết nối account info:", error);
+                updateElement("email", "❌ Lỗi kết nối");
+                updateElement("phone", "❌ Lỗi kết nối");
+                updateElement("address", "❌ Lỗi kết nối");
             }
         }
 
-
-
-        // Show account info setup message
-        function showAccountInfoSetup() {
-            // Create a notification in the user-info section
-            const userInfoDiv = document.querySelector('.user-info');
-            
-            // Remove existing setup message if any
-            const existingMsg = document.getElementById('setup-message');
-            if (existingMsg) {
-                existingMsg.remove();
-            }
-            
-            // Create setup message
-            const setupDiv = document.createElement('div');
-            setupDiv.id = 'setup-message';
-            setupDiv.className = 'alert alert-info';
-            setupDiv.innerHTML = `
-                <p><strong>📋 Thiết lập thông tin cá nhân</strong></p>
-                <p>Bạn chưa thiết lập thông tin cá nhân (email, số điện thoại, địa chỉ).</p>
-                <div style="margin-top: 10px;">
-                    <a href="/static/info.html" class="btn btn-primary" style="display: inline-block; margin-right: 10px;">
-                        ✏️ Thiết lập ngay
-                    </a>
-                    <button onclick="this.parentElement.parentElement.remove()" class="btn btn-secondary" style="display: inline-block;">
-                        ⏭️ Bỏ qua
-                    </button>
-                </div>
-            `;
-            
-            // Insert after user-info div
-            userInfoDiv.insertAdjacentElement('afterend', setupDiv);
+        async function logout() {
+            // Hiện modal xác nhận
+            showLogoutModal(async function onConfirm() {
+                try {
+                    console.log("🚪 Đang đăng xuất...");
+                    // Call backend logout API first
+                    const response = await fetch("/logout", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        credentials: 'include'
+                    });
+                    console.log("📡 Logout API response:", response.status);
+                    // Clear local cookies regardless of API response
+                    deleteCookie("access_token");
+                    deleteCookie("refresh_token");
+                    deleteCookie("cart");
+                    clearAllCookiesSync();
+                    console.log("✅ Đã xóa tất cả cookies local");
+                    // Hiện notification nhỏ sau khi modal đã đóng
+                    setTimeout(() => {
+                        window.location.href = "/static/login.html";
+                    }, 1200);
+                } catch (error) {
+                    console.error("❌ Lỗi khi đăng xuất:", error);
+                    deleteCookie("access_token");
+                    deleteCookie("refresh_token");
+                    deleteCookie("cart");
+                    clearAllCookiesSync();
+                    showNotification("Đã đăng xuất (có lỗi API nhưng cookies đã được xóa)", 'warning');
+                    setTimeout(() => {
+                        window.location.href = "/static/login.html";
+                    }, 1200);
+                }
+            });
         }
 
+        function showLogoutModal(onConfirm) {
+            const modal = document.getElementById('logout-modal');
+            modal.style.display = 'flex';
+            // Focus nút Đồng ý cho UX tốt
+            setTimeout(() => { document.getElementById('modal-logout-confirm').focus(); }, 100);
+            // Sự kiện Đồng ý
+            document.getElementById('modal-logout-confirm').onclick = () => {
+                modal.style.display = 'none';
+                onConfirm();
+            };
+            // Sự kiện Hủy
+            document.getElementById('modal-logout-cancel').onclick = () => {
+                modal.style.display = 'none';
+            };
+            // Đóng modal khi bấm ra ngoài
+            modal.onclick = (e) => {
+                if (e.target === modal) modal.style.display = 'none';
+            };
+        }
 
+        function clearAllCookiesSync() {
+            // Synchronous version of clearAllCookies for use in logout
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i];
+                const eqPos = cookie.indexOf('=');
+                const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+                if (name) {
+                    document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+                    document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=' + window.location.hostname;
+                }
+            }
+            console.log("🗑️ Cleared all cookies synchronously");
+        }
 
-        // Load user info when page loads
-        loadUserInfo();
+        // Initialize dashboard when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("🚀 Khởi tạo dashboard...");
+            loadUserInfo();
+        });
     </script>
 </body>
 </html> 

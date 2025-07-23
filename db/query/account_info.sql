@@ -64,3 +64,13 @@ SELECT account_id FROM account_info WHERE email =$1;
 -- name: GetAccountInfoByAccountID :one
 SELECT * FROM account_info WHERE account_id = $1;
 
+-- name: UpdateAccountInfoByAccountID :one
+UPDATE account_info
+SET
+  name = $2,
+  email = $3,
+  phone_number = $4,
+  address = $5
+WHERE account_id = $1
+RETURNING *;
+

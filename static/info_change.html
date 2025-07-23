@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Cập nhật thông tin cá nhân</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        .form-group { margin-bottom: 18px; }
+        .form-label { font-weight: 500; }
+        .form-input { width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #ccc; }
+        .btn { padding: 12px 28px; border-radius: 8px; font-weight: bold; }
+        .alert { margin: 16px 0; padding: 12px 18px; border-radius: 8px; }
+        .alert-success { background: #eafbe7; color: #2e7d32; }
+        .alert-error { background: #fdecea; color: #c62828; }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <div class="card">
+            <h2>Cập nhật thông tin cá nhân</h2>
+            <form id="infoForm">
+                <div class="form-group">
+                    <label class="form-label" for="name">Họ tên</label>
+                    <input class="form-input" type="text" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="email">Email</label>
+                    <input class="form-input" type="email" id="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="phone">Số điện thoại</label>
+                    <input class="form-input" type="text" id="phone" name="phone" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="address">Địa chỉ</label>
+                    <input class="form-input" type="text" id="address" name="address" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+            </form>
+            <div id="alert"></div>
+        </div>
+    </div>
+    <script>
+        let accountInfoId = null;
+
+        // Hiển thị thông báo
+        function showAlert(msg, type = 'success') {
+            const alertDiv = document.getElementById('alert');
+            alertDiv.innerHTML = `<div class="alert alert-${type === 'success' ? 'success' : 'error'}">${msg}</div>`;
+            setTimeout(() => { alertDiv.innerHTML = ''; }, 4000);
+        }
+
+        // Load thông tin cá nhân hiện tại
+        async function loadInfo() {
+            try {
+                const res = await fetch('/profile', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include'
+                });
+                if (!res.ok) throw new Error('Không thể tải thông tin cá nhân!');
+                const info = await res.json();
+                // Lưu lại id để PATCH
+                accountInfoId = info.id || info.account_id;
+                document.getElementById('name').value = info.name || '';
+                document.getElementById('email').value = info.email || '';
+                document.getElementById('phone').value = info.phone_number || '';
+                document.getElementById('address').value = info.address || '';
+            } catch (err) {
+                showAlert(err.message, 'error');
+            }
+        }
+
+        // Gửi PATCH để cập nhật thông tin
+        document.getElementById('infoForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            if (!accountInfoId) {
+                showAlert('Không tìm thấy ID thông tin cá nhân!', 'error');
+                return;
+            }
+            const data = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                phone_number: document.getElementById('phone').value,
+                address: document.getElementById('address').value
+            };
+            try {
+                const res = await fetch(`/account_info/${accountInfoId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(data)
+                });
+                if (!res.ok) {
+                    const err = await res.text();
+                    throw new Error(err || 'Cập nhật thất bại!');
+                }
+                showAlert('Cập nhật thành công!', 'success');
+                setTimeout(() => {
+                    window.location.href = '/static/profile.html';
+                }, 1200);
+            } catch (err) {
+                showAlert('Lỗi: ' + err.message, 'error');
+            }
+        });
+
+        // Khởi tạo
+        loadInfo();
+    </script>
+</body>
+</html>

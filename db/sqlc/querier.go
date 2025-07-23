@@ -75,6 +75,7 @@ type Querier interface {
 	UpdateAccount(ctx context.Context, arg UpdateAccountParams) (Account, error)
 	UpdateAccountInfo(ctx context.Context, arg UpdateAccountInfoParams) (AccountInfo, error)
 	UpdateAccountInfoAddress(ctx context.Context, arg UpdateAccountInfoAddressParams) error
+	UpdateAccountInfoByAccountID(ctx context.Context, arg UpdateAccountInfoByAccountIDParams) (AccountInfo, error)
 	UpdateAccountInfoEmail(ctx context.Context, arg UpdateAccountInfoEmailParams) error
 	UpdateAccountInfoName(ctx context.Context, arg UpdateAccountInfoNameParams) error
 	UpdateAccountInfoPhoneNumber(ctx context.Context, arg UpdateAccountInfoPhoneNumberParams) error

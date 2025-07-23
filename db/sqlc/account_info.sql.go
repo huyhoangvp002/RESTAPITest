@@ -268,6 +268,47 @@ func (q *Queries) UpdateAccountInfoAddress(ctx context.Context, arg UpdateAccoun
 	return err
 }
 
+const updateAccountInfoByAccountID = `-- name: UpdateAccountInfoByAccountID :one
+UPDATE account_info
+SET
+  name = $2,
+  email = $3,
+  phone_number = $4,
+  address = $5
+WHERE account_id = $1
+RETURNING id, account_id, name, email, phone_number, address, created_at, updated_at
+`
+
+type UpdateAccountInfoByAccountIDParams struct {
+	AccountID   int64  `json:"account_id"`
+	Name        string `json:"name"`
+	Email       string `json:"email"`
+	PhoneNumber string `json:"phone_number"`
+	Address     string `json:"address"`
+}
+
+func (q *Queries) UpdateAccountInfoByAccountID(ctx context.Context, arg UpdateAccountInfoByAccountIDParams) (AccountInfo, error) {
+	row := q.db.QueryRowContext(ctx, updateAccountInfoByAccountID,
+		arg.AccountID,
+		arg.Name,
+		arg.Email,
+		arg.PhoneNumber,
+		arg.Address,
+	)
+	var i AccountInfo
+	err := row.Scan(
+		&i.ID,
+		&i.AccountID,
+		&i.Name,
+		&i.Email,
+		&i.PhoneNumber,
+		&i.Address,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const updateAccountInfoEmail = `-- name: UpdateAccountInfoEmail :exec
 UPDATE account_info SET email = $2, updated_at = NOW() WHERE id = $1
 `
