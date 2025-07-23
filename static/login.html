@@ -198,7 +198,7 @@
     </style>
 </head>
 <body>
-    <a href="/" class="back-link">← Trang chủ</a>
+    <a href="/static/landing_page.html" class="back-link">← Trang chủ</a>
 
     <div class="login-container">
         <h1 class="login-title">🔐 Đăng Nhập</h1>
@@ -256,6 +256,22 @@
     </div>
 
     <script>
+        // const url = "http://localhost:8080"
+
+        // const loginFunction = async () => {
+        //     try {
+        //         const response = await fetch(`${url}/${path}`, {
+        //             method: 'POST',
+        //             body: JSON.stringify({
+        //                 username: username,
+        //                 password: password
+        //             })
+        //         })
+        //     }catch(error){
+
+        //     }
+        // }
+
         // Kiểm tra xem đã đăng nhập chưa
         window.onload = function() {
             checkIfLoggedIn();

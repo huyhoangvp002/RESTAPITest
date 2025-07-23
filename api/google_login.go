@@ -77,7 +77,7 @@ func (server *Server) HandleGoogleCallback(ctx *gin.Context) {
 			return
 		}
 		arg := db.CreateAccountParams{
-			Username:     userInfo.Email,
+			Username:     util.RandomString(8),
 			HashPassword: hash_password,
 			Role:         "buyer",
 		}
@@ -86,14 +86,13 @@ func (server *Server) HandleGoogleCallback(ctx *gin.Context) {
 			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 			return
 		}
-		infoArg := db.CreateAccountInfoParams{
-			AccountID:   account.ID,
-			Email:       userInfo.Email,
-			Name:        userInfo.Name,
-			Address:     "", // hoặc default
-			PhoneNumber: "", // hoặc default
+
+		arg1 := db.CreateAccountInfoParams{
+			Name:  userInfo.Name,
+			Email: userInfo.Email,
 		}
-		_, err = server.store.CreateAccountInfo(ctx, infoArg)
+
+		_, err = server.store.CreateAccountInfo(ctx, arg1)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 			return
@@ -107,7 +106,7 @@ func (server *Server) HandleGoogleCallback(ctx *gin.Context) {
 		}
 
 		ctx.SetCookie("access_token", tokenString, 3600, "/", "", false, false)
-		ctx.Redirect(http.StatusTemporaryRedirect, "/static/home.html")
+		ctx.Redirect(http.StatusTemporaryRedirect, "/static/info.html")
 		return
 	}
 

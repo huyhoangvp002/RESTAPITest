@@ -61,7 +61,7 @@ func (server *Server) ListCategories(ctx *gin.Context) {
 	}
 
 	arg := db.ListCategoriesParams{
-		Limit:  int32(req.PageID),
+		Limit:  int32(req.PageSize),
 		Offset: int32((req.PageID - 1) * req.PageSize),
 	}
 

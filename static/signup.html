@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Đăng ký tài khoản</title>
+  <style>
+    body { font-family: Arial; max-width: 400px; margin: 40px auto; }
+    input, button { width: 100%; margin: 8px 0; padding: 10px; }
+    button { background-color: green; color: white; border: none; cursor: pointer; }
+    button:hover { background-color: darkgreen; }
+  </style>
+</head>
+<body>
+  <h2>Đăng ký tài khoản</h2>
+  <form id="registerForm">
+    <input type="text" id="username" placeholder="Tài khoản" required />
+    <input type="password" id="password" placeholder="Mật khẩu" required />
+    <input type="text" id="name" placeholder="Họ tên" required />
+    <input type="email" id="email" placeholder="Email" required />
+    <input type="text" id="phone_number" placeholder="Số điện thoại" required />
+    <input type="text" id="address" placeholder="Địa chỉ" required />
+    <button type="submit">Đăng ký</button>
+  </form>
+
+  <script>
+    document.getElementById("registerForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const data = {
+        username: document.getElementById("username").value,
+        password: document.getElementById("password").value,
+        name: document.getElementById("name").value,
+        email: document.getElementById("email").value,
+        phone_number: document.getElementById("phone_number").value,
+        address: document.getElementById("address").value
+      };
+
+      fetch("http://localhost:8080/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      })
+        .then(async (res) => {
+          if (!res.ok) {
+            const err = await res.text();
+            alert("Lỗi đăng ký: " + err);
+            return;
+          }
+          alert("Đăng ký thành công!");
+          window.location.href = "/static/login.html"; // bạn có thể đổi thành home.html
+        })
+        .catch((err) => {
+          alert("Không thể kết nối tới server: " + err);
+        });
+    });
+  </script>
+</body>
+</html>

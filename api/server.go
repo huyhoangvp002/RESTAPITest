@@ -41,15 +41,17 @@ func NewServer(config util.Config, store db.Querier) (*Server, error) {
 
 func (server *Server) setUpRouter() {
 	router := gin.Default()
+
 	router.Static("/static", "./static")
 	router.Use(cors.Default())
 
 	router.POST("/login", server.Login)
-	router.POST("/signup", server.CreateAccount)
+	router.POST("/register", server.Register)
 
 	router.GET("/products", server.SearchProductByName)
 	router.GET("/auth/google/login", server.HandleGoogleLogin)
 	router.GET("/auth/google/callback", server.HandleGoogleCallback)
+	router.GET("/", server.redirect)
 
 	router.POST("/api/webhook", server.WebHook)
 
@@ -73,6 +75,7 @@ func (server *Server) setUpRouter() {
 	authRoutes.GET("/account/list", roleMiddleware("admin"), server.ListAccounts)
 	authRoutes.GET("/account_info", server.GetAccountInfo)
 	authRoutes.GET("/cart", server.ShowCart)
+	authRoutes.GET("/categories/all", server.ListCategories)
 
 	authRoutes.PATCH("/products/:id", server.UdateProduct)
 	authRoutes.PATCH("/cart/:id", server.UpdateProductInCart)

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Thông tin cá nhân</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      padding: 30px;
+    }
+
+    .form-container {
+      background-color: white;
+      max-width: 600px;
+      margin: auto;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    button {
+      margin-top: 25px;
+      width: 100%;
+      padding: 12px;
+      background-color: #4CAF50;
+      color: white;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="form-container">
+    <h2>Nhập thông tin cá nhân</h2>
+
+    <form id="info-form">
+      <label for="name">Họ và tên:</label>
+      <input type="text" id="name" name="name" required>
+
+      <label for="email">Email:</label>
+      <input type="email" id="email" name="email" required>
+
+      <label for="phone">Số điện thoại:</label>
+      <input type="text" id="phone" name="phone_number" required>
+
+      <label for="address">Địa chỉ:</label>
+      <input type="text" id="address" name="address">
+
+      <button type="submit">Gửi thông tin</button>
+    </form>
+  </div>
+
+  <script>
+    document.getElementById("info-form").addEventListener("submit", async function(e) {
+      e.preventDefault();
+
+      const payload = {
+        name: document.getElementById("name").value,
+        email: document.getElementById("email").value,
+        phone_number: document.getElementById("phone").value,
+        address: document.getElementById("address").value
+      };
+
+      try {
+        const response = await fetch("http://localhost:8080/create_info", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload),
+          credentials: "include" // Gửi cookie JWT nếu đang dùng
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          alert("Lỗi: " + (data.error || "Không rõ"));
+          return;
+        }
+
+        // ✅ Nếu thành công thì chuyển sang home.html
+        window.location.href = "/static/home.html";
+
+      } catch (err) {
+        console.error("Lỗi gửi thông tin:", err);
+        alert("Không thể kết nối tới server!");
+      }
+    });
+  </script>
+
+</body>
+</html>

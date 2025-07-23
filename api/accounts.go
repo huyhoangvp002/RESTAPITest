@@ -11,11 +11,15 @@ import (
 )
 
 type createAccountRequest struct {
-	Username string `json:"username" binding:"required"`
-	Password string `json:"hash_password" binding:"required,min=6"`
+	Username    string `json:"username" binding:"required"`
+	Password    string `json:"password" binding:"required,min=6"`
+	Name        string `json:"name" binding:"required"`
+	Email       string `json:"email" binding:"required,email"`
+	PhoneNumber string `json:"phone_number" binding:"required"`
+	Address     string `json:"address" binding:"required"`
 }
 
-func (server *Server) CreateAccount(ctx *gin.Context) {
+func (server *Server) Register(ctx *gin.Context) {
 	var req createAccountRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
@@ -33,6 +37,25 @@ func (server *Server) CreateAccount(ctx *gin.Context) {
 		Role:         "buyer",
 	}
 	account, err := server.store.CreateAccount(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	accountID, err := server.store.GetAccountIDByUsername(ctx, req.Username)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	arg1 := db.CreateAccountInfoParams{
+		AccountID:   accountID,
+		Name:        req.Name,
+		Email:       req.Email,
+		PhoneNumber: req.PhoneNumber,
+		Address:     req.Address,
+	}
+	_, err = server.store.CreateAccountInfo(ctx, arg1)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -260,4 +283,8 @@ func (server *Server) LogOut(ctx *gin.Context) {
 		"access_token", "", -1, "/", "", false, true,
 	)
 	ctx.JSON(http.StatusOK, gin.H{"msg": "see you again"})
+}
+
+func (server *Server) redirect(ctx *gin.Context) {
+	ctx.Redirect(http.StatusTemporaryRedirect, "/static/landing_page.html")
 }

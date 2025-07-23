@@ -20,6 +20,6 @@ run:
 	go run main.go
 
 db:
-	export DB_SOURCE="postgresql://root:secret@localhost:5432/Test_shop?sslmode=disable"
+	sudo docker start postgres12
 
 .PHONY: postgres createdb dropdb migrateup migratedown sqlc mock run db
