@@ -1,111 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Sản phẩm</title>
-  <link rel="stylesheet" href="/static/style.css">
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: #f0f2f5;
-    }
-
-    /* Header Navigation */
-    header {
-      background-color: #2c3e50;
-      color: white;
-      padding: 10px 30px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .nav-left {
-      display: flex;
-      align-items: center;
-    }
-
-    .nav-left img {
-      height: 40px;
-      margin-right: 15px;
-    }
-
-    .nav-left a {
-      margin-right: 20px;
-      color: white;
-      text-decoration: none;
-      font-weight: bold;
-    }
-
-    .nav-left a:hover {
-      text-decoration: underline;
-    }
-
-    .cart-icon {
-      width: 28px;
-      height: 28px;
-      cursor: pointer;
-    }
-
-    /* Category filter */
-    .filter-section {
-      padding: 20px;
-    }
-
-    /* Product grid */
-    #productList {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 20px;
-      padding: 20px;
-    }
-
-    .product-card {
-      background-color: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      padding: 15px;
-      text-align: center;
-      transition: transform 0.2s;
-    }
-
-    .product-card:hover {
-      transform: translateY(-5px);
-    }
-
-    .product-image {
-      width: 100%;
-      height: 150px;
-      object-fit: cover;
-      border-radius: 8px;
-    }
-
-    .product-name {
-      font-size: 18px;
-      margin-top: 10px;
-      color: #333;
-    }
-
-    .product-price {
-      font-weight: bold;
-      margin: 10px 0;
-      color: #e74c3c;
-    }
-
-    .add-to-cart {
-      padding: 6px 10px;
-      background-color: #27ae60;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    .add-to-cart:hover {
-      background-color: #1e8449;
-    }
-  </style>
+  <title>Danh sách sản phẩm</title>
+  <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
   <header>
@@ -113,9 +11,12 @@
       <img src="/static/images/logo.png" alt="Logo">
       <a href="/static/home.html">Trang chủ</a>
       <a href="/products">Sản phẩm</a>
-      <a href="/account">Tài khoản</a>
+      <a href="/static/profile.html">Tài khoản</a>
     </div>
-    <img src="/static/images/cart.png" class="cart-icon" alt="Giỏ hàng">
+    <div>
+      <img src="/static/images/cart.png" class="cart-icon" alt="Giỏ hàng">
+      <span id="cart-count">(0)</span>
+    </div>
   </header>
 
   <div class="filter-section">
@@ -126,63 +27,74 @@
   <div id="productList"></div>
 
   <script>
-    const token = localStorage.getItem("token");
+    function setCookie(name, value, days = 7) {
+      const expires = new Date(Date.now() + days * 864e5).toUTCString();
+      document.cookie = name + "=" + encodeURIComponent(value) + "; expires=" + expires + "; path=/";
+    }
+
+    function getCookie(name) {
+      return document.cookie.split("; ").reduce((r, v) => {
+        const parts = v.split("=");
+        return parts[0] === name ? decodeURIComponent(parts[1]) : r;
+      }, "");
+    }
+
+    function isLoggedIn() {
+      return !!getCookie("access_token");
+    }
+
+    function updateCartCount() {
+      const cart = JSON.parse(getCookie("cart") || "[]");
+      const total = cart.reduce((sum, item) => sum + item.quantity, 0);
+      document.getElementById("cart-count").textContent = `(${total})`;
+    }
 
     async function loadCategories() {
       try {
-        const res = await fetch('/categories/all?page_id=1&page_size=10', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const categories = await res.json();
+        const res = await fetch('/categories/all?page_id=1&page_size=10');
+        const data = await res.json();
         const select = document.getElementById("categorySelect");
 
-        const allOption = document.createElement("option");
-        allOption.value = "";
-        allOption.textContent = "Tất cả danh mục";
-        select.appendChild(allOption);
+        const all = document.createElement("option");
+        all.value = "";
+        all.textContent = "Tất cả danh mục";
+        select.appendChild(all);
 
-        categories.forEach(c => {
-          const option = document.createElement("option");
-          option.value = c.id;
-          option.textContent = c.name;
-          select.appendChild(option);
+        data.forEach(c => {
+          const opt = document.createElement("option");
+          opt.value = c.id;
+          opt.textContent = c.name;
+          select.appendChild(opt);
         });
 
         select.addEventListener("change", () => {
           loadProducts(select.value);
         });
 
-        loadProducts(); // load ban đầu
+        loadProducts();
       } catch (err) {
-        console.error("Lỗi khi tải danh mục", err);
+        console.error("Lỗi tải danh mục:", err);
       }
     }
 
     async function loadProducts(categoryId = "") {
       try {
-        const params = new URLSearchParams({
-          page_id: 1,
-          page_size: 10,
-        });
+        const params = new URLSearchParams({ page_id: 1, page_size: 10 });
         if (categoryId) params.append("category_id", categoryId);
 
-        const res = await fetch(`/products/all?${params.toString()}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
+        const res = await fetch(`/products/all?${params.toString()}`);
         const products = await res.json();
-
         const container = document.getElementById("productList");
         container.innerHTML = "";
+
         products.forEach(p => {
           const card = document.createElement("div");
           card.className = "product-card";
 
           const img = document.createElement("img");
-          img.className = "product-image";
           img.src = `/static/images/product-${p.id}.jpg`;
-          img.onerror = () => {
-            img.src = "/static/images/default.jpg";
-          };
+          img.className = "product-image";
+          img.onerror = () => img.src = "/static/images/default.jpg";
 
           const name = document.createElement("div");
           name.className = "product-name";
@@ -195,6 +107,7 @@
           const btn = document.createElement("button");
           btn.className = "add-to-cart";
           btn.textContent = "➕ Giỏ hàng";
+          btn.onclick = () => handleAddToCart(p.id);
 
           card.appendChild(img);
           card.appendChild(name);
@@ -203,11 +116,42 @@
           container.appendChild(card);
         });
       } catch (err) {
-        console.error("Lỗi khi tải sản phẩm", err);
+        console.error("Lỗi tải sản phẩm:", err);
       }
     }
 
+    function handleAddToCart(productId) {
+      if (!isLoggedIn()) {
+        showLoginPopup();
+        return;
+      }
+
+      const cart = JSON.parse(getCookie("cart") || "[]");
+      const existing = cart.find(item => item.product_id === productId);
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        cart.push({ product_id: productId, quantity: 1 });
+      }
+      setCookie("cart", JSON.stringify(cart), 7);
+      updateCartCount();
+      alert("✅ Đã thêm vào giỏ hàng!");
+    }
+
+    function showLoginPopup() {
+      const box = document.createElement("div");
+      box.className = "login-popup";
+
+      box.innerHTML = `
+        <p><strong>⚠️ Bạn cần đăng nhập để thêm sản phẩm vào giỏ hàng.</strong></p>
+        <button class="login-btn" onclick="window.location='/static/login.html'">👉 Đăng nhập</button>
+        <button class="close-btn" onclick="this.parentElement.remove()">Đóng</button>
+      `;
+      document.body.appendChild(box);
+    }
+
     loadCategories();
+    updateCartCount();
   </script>
 </body>
 </html>

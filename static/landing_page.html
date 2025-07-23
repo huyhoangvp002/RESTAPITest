@@ -1,60 +1,94 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Trang Chủ</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: linear-gradient(to right, #ffcccc, #ffe6e6);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-
-    .container {
-      text-align: center;
-      background-color: white;
-      padding: 40px;
-      border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-    }
-
-    h1 {
-      color: #c0392b;
-      margin-bottom: 20px;
-    }
-
-    p {
-      color: #555;
-      font-size: 16px;
-      margin-bottom: 30px;
-    }
-
-    .btn-login {
-      background-color: #c0392b;
-      color: white;
-      padding: 12px 24px;
-      border: none;
-      border-radius: 6px;
-      text-decoration: none;
-      font-size: 16px;
-      transition: background-color 0.3s;
-    }
-
-    .btn-login:hover {
-      background-color: #a93226;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Nhập - Hệ Thống</title>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-  <div class="container">
-    <h1>Chào mừng đến với cửa hàng của chúng tôi!</h1>
-    <p>Khám phá các sản phẩm tuyệt vời hoặc đăng nhập để bắt đầu mua sắm.</p>
-    <a href="./login.html" class="btn-login">Đăng nhập</a>
-  </div>
+    <div class="page-container">
+        <div class="card">
+            <h1 class="title">🔐 Đăng Nhập</h1>
+            <p class="subtitle">Chào mừng bạn quay trở lại!</p>
+            
+            <form class="form" id="loginForm">
+                <div class="form-group">
+                    <label for="username">Tài khoản:</label>
+                    <input type="text" id="username" class="form-input" placeholder="Nhập tài khoản" required />
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Mật khẩu:</label>
+                    <input type="password" id="password" class="form-input" placeholder="Nhập mật khẩu" required />
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-full">
+                    <span class="btn-text">Đăng Nhập</span>
+                    <span class="loading" id="loading" style="display: none;"></span>
+                </button>
+            </form>
+            
+            <div class="nav-links">
+                <a href="/static/signup.html">Đăng ký tài khoản</a>
+                <a href="/static/landing_page.html">Trang chủ</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("loginForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+            
+            const loading = document.getElementById("loading");
+            const btnText = document.querySelector(".btn-text");
+            
+            // Show loading
+            loading.style.display = "inline-block";
+            btnText.style.display = "none";
+
+            const data = {
+                username: document.getElementById("username").value,
+                password: document.getElementById("password").value
+            };
+
+            fetch("/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            })
+            .then(async (res) => {
+                // Hide loading
+                loading.style.display = "none";
+                btnText.style.display = "inline";
+                
+                if (!res.ok) {
+                    const err = await res.text();
+                    alert("❌ Lỗi đăng nhập: " + err);
+                    return;
+                }
+                
+                const result = await res.json();
+                
+                // Store tokens in cookies
+                setCookie("access_token", result.access_token, 7);
+                setCookie("refresh_token", result.refresh_token, 30);
+                
+                alert("✅ Đăng nhập thành công!");
+                window.location.href = "/static/home.html";
+            })
+            .catch(err => {
+                loading.style.display = "none";
+                btnText.style.display = "inline";
+                console.error("Network error:", err);
+                alert("❌ Lỗi kết nối mạng!");
+            });
+        });
+
+        function setCookie(name, value, days) {
+            const expires = new Date(Date.now() + days * 864e5).toUTCString();
+            document.cookie = name + "=" + encodeURIComponent(value) + "; expires=" + expires + "; path=/";
+        }
+    </script>
 </body>
-</html>
+</html> 

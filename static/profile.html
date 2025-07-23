@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>👤 Thông Tin Tài Khoản</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="page-container">
+        <div class="card">
+            <div class="profile-avatar">
+                <img src="/static/images/default.jpg" alt="Avatar" class="avatar-image" id="avatar-img">
+            </div>
+            
+            <h1 class="title">👤 Thông Tin Tài Khoản</h1>
+            <p class="subtitle">Xem và quản lý thông tin cá nhân</p>
+            
+            <div class="profile-content" id="profile-content">
+                <div class="loading-container">
+                    <div class="loading"></div>
+                    <p>Đang tải thông tin...</p>
+                </div>
+            </div>
+            
+            <div class="alert alert-error" id="error-msg" style="display: none;">
+                <p id="error-text"></p>
+                <button class="btn btn-primary" id="login-btn" style="display: none;">
+                    🔐 Đăng nhập
+                </button>
+            </div>
+            
+            <div class="nav-links">
+                <a href="/static/home.html">🏠 Trang chủ</a>
+                <a href="/static/products.html">🛒 Sản phẩm</a>
+                <a href="/static/info.html">✏️ Sửa thông tin</a>
+                <button onclick="logout()" class="btn btn-danger">🚪 Đăng xuất</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function getCookie(name) {
+            return document.cookie.split("; ").reduce((r, v) => {
+                const parts = v.split("=");
+                return parts[0] === name ? decodeURIComponent(parts[1]) : r;
+            }, "");
+        }
+
+        function deleteCookie(name) {
+            document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        }
+
+        function logout() {
+            if (confirm("🤔 Bạn có chắc chắn muốn đăng xuất?")) {
+                deleteCookie("access_token");
+                deleteCookie("refresh_token");
+                deleteCookie("cart");
+                alert("👋 Đã đăng xuất thành công!");
+                window.location.href = "/static/landing_page.html";
+            }
+        }
+
+        function showError(message) {
+            const errorMsg = document.getElementById('error-msg');
+            const errorText = document.getElementById('error-text');
+            const loginBtn = document.getElementById('login-btn');
+            const profileContent = document.getElementById('profile-content');
+
+            profileContent.style.display = 'none';
+            errorText.textContent = message;
+            errorMsg.style.display = "block";
+            loginBtn.style.display = "inline-block";
+
+            loginBtn.onclick = function () {
+                window.location.href = "/static/login.html";
+            };
+        }
+
+        function displayProfile(data) {
+            const profileContent = document.getElementById('profile-content');
+            
+            profileContent.innerHTML = `
+                <div class="user-info">
+                    <h3>📋 Thông tin cá nhân</h3>
+                    <div class="profile-table">
+                        <div class="profile-row">
+                            <span class="profile-label">👤 Tài khoản:</span>
+                            <span class="profile-value">${data.username || 'Chưa cập nhật'}</span>
+                        </div>
+                        <div class="profile-row">
+                            <span class="profile-label">📧 Email:</span>
+                            <span class="profile-value">${data.email || 'Chưa cập nhật'}</span>
+                        </div>
+                        <div class="profile-row">
+                            <span class="profile-label">👨‍💼 Họ tên:</span>
+                            <span class="profile-value">${data.name || 'Chưa cập nhật'}</span>
+                        </div>
+                        <div class="profile-row">
+                            <span class="profile-label">📱 Số điện thoại:</span>
+                            <span class="profile-value">${data.phone_number || 'Chưa cập nhật'}</span>
+                        </div>
+                        <div class="profile-row">
+                            <span class="profile-label">🏠 Địa chỉ:</span>
+                            <span class="profile-value">${data.address || 'Chưa cập nhật'}</span>
+                        </div>
+                        <div class="profile-row">
+                            <span class="profile-label">👥 Vai trò:</span>
+                            <span class="profile-value role-badge">${data.role || 'User'}</span>
+                        </div>
+                        <div class="profile-row">
+                            <span class="profile-label">📅 Tạo lúc:</span>
+                            <span class="profile-value">${data.created_at ? new Date(data.created_at).toLocaleString('vi-VN') : 'Chưa rõ'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Simple JWT payload decoder (without verification)
+        function parseJWT(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                console.error('Error parsing JWT:', e);
+                return null;
+            }
+        }
+
+        async function loadProfile() {
+            const token = getCookie("access_token");
+            
+            if (!token) {
+                showError("⚠️ Bạn phải đăng nhập trước!");
+                return;
+            }
+
+            // Parse JWT to get username
+            const payload = parseJWT(token);
+            if (!payload || !payload.username) {
+                showError("❌ Token không hợp lệ. Vui lòng đăng nhập lại!");
+                return;
+            }
+
+            try {
+                // Get basic account info using /account/list endpoint with cookie auth
+                const response = await fetch('/profile', {
+                    method: 'GET',
+                    headers: { 
+                        'Content-Type': 'application/json' 
+                    },
+                    credentials: 'include' // Use cookie authentication
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        showError("🔒 Phiên đăng nhập đã hết hạn!");
+                        return;
+                    }
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const responseData = await response.json();
+                console.log("✅ Raw response received:", responseData);
+                
+                // Handle different response types
+                let account;
+                if (Array.isArray(responseData)) {
+                    // Admin gets array of accounts, we want the current user's account
+                    account = responseData.find(acc => acc.username === payload.username) || responseData[0];
+                } else {
+                    // Regular user gets single account object
+                    account = responseData;
+                }
+                
+                console.log("✅ Selected account:", account);
+                
+                // Load additional account info - backend route is now GET /account_info/:id
+                let accountInfo = null;
+                
+                // Try different ID approaches since backend expects account_info primary key ID
+                const attempts = [
+                    { id: account.id, desc: "Using account.id" },
+                    { id: 1, desc: "Trying account_info ID 1" },
+                    { id: 2, desc: "Trying account_info ID 2" },
+                    { id: 3, desc: "Trying account_info ID 3" },
+                    { id: 4, desc: "Trying account_info ID 4" },
+                    { id: 5, desc: "Trying account_info ID 5" }
+                ];
+
+                for (const attempt of attempts) {
+                    if (!attempt.id) continue;
+                    
+                    try {
+                        console.log(`🌐 ${attempt.desc}: /account_info/${attempt.id}`);
+                        const infoResponse = await fetch(`/account_info/${attempt.id}`, {
+                            method: 'GET',
+                            headers: { 
+                                'Content-Type': 'application/json' 
+                            },
+                            credentials: 'include'
+                        });
+                        
+                        if (infoResponse.ok) {
+                            accountInfo = await infoResponse.json();
+                            console.log(`✅ SUCCESS with ${attempt.desc}:`, accountInfo);
+                            break; // Exit loop on success
+                        } else {
+                            console.log(`❌ ${attempt.desc} failed: ${infoResponse.status}`);
+                        }
+                    } catch (err) {
+                        console.log(`❌ ${attempt.desc} error:`, err);
+                    }
+                }
+                
+                if (!accountInfo) {
+                    console.warn('❌ All account_info attempts failed');
+                }
+
+                // Combine account and account_info data
+                const combinedData = {
+                    username: account.username || payload.username,
+                    role: account.role || payload.role,
+                    email: accountInfo?.email || "Chưa cập nhật",
+                    name: accountInfo?.name || "Chưa cập nhật", 
+                    phone_number: accountInfo?.phone_number || "Chưa cập nhật",
+                    address: accountInfo?.address || "Chưa cập nhật",
+                    created_at: account.created_at
+                };
+
+                displayProfile(combinedData);
+
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                showError(`❌ Đã có lỗi xảy ra: ${error.message}`);
+            }
+        }
+
+        // Detect if background image loads successfully
+        const img = new Image();
+        img.onload = function() {
+            document.body.classList.add('bg-loaded');
+        };
+        img.onerror = function() {
+            console.log('⚠️ Background image bg.png not found, using gradient fallback');
+        };
+        img.src = '/static/images/bg.png';
+
+        // Load profile when page loads
+        loadProfile();
+    </script>
+</body>
+</html> 

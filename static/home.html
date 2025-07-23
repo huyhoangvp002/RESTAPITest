@@ -1,241 +1,261 @@
-    <!DOCTYPE html>
-    <html lang="vi">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Trang Chủ - Đăng Nhập Thành Công</title>
-        <style>
-            * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-            }
-
-            body {
-                font-family: 'Arial', sans-serif;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                min-height: 100vh;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-            }
-
-            .container {
-                background: white;
-                padding: 2rem;
-                border-radius: 20px;
-                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-                text-align: center;
-                max-width: 500px;
-                width: 90%;
-            }
-
-            .welcome-title {
-                color: #333;
-                font-size: 2rem;
-                margin-bottom: 1rem;
-                font-weight: 700;
-            }
-
-            .user-info {
-                background: #f8f9fa;
-                padding: 1.5rem;
-                border-radius: 10px;
-                margin: 1.5rem 0;
-                border-left: 4px solid #667eea;
-            }
-
-            .user-info h3 {
-                color: #667eea;
-                margin-bottom: 0.5rem;
-            }
-
-            .user-info p {
-                color: #666;
-                font-size: 1.1rem;
-            }
-
-            .btn {
-                background: linear-gradient(45deg, #667eea, #764ba2);
-                color: white;
-                padding: 12px 30px;
-                border: none;
-                border-radius: 25px;
-                font-size: 1rem;
-                cursor: pointer;
-                transition: transform 0.3s ease;
-                margin: 0.5rem;
-            }
-
-            .btn:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-            }
-
-            .btn-logout {
-                background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-            }
-
-            .status {
-                padding: 1rem;
-                border-radius: 8px;
-                margin-bottom: 1rem;
-            }
-
-            .status.success {
-                background: #d4edda;
-                color: #155724;
-                border: 1px solid #c3e6cb;
-            }
-
-            .status.error {
-                background: #f8d7da;
-                color: #721c24;
-                border: 1px solid #f5c6cb;
-            }
-
-            .loading {
-                color: #667eea;
-                font-style: italic;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h1 class="welcome-title">🎉 Chào Mừng!</h1>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trang Chủ - Đăng Nhập Thành Công</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="page-container">
+        <div class="card large">
+            <h1 class="welcome-title">🎉 Chào mừng bạn!</h1>
+            <p class="subtitle">Đăng nhập thành công vào hệ thống</p>
             
-            <div id="status" class="status loading">
-                Đang kiểm tra thông tin đăng nhập...
+            <div class="user-info">
+                <h3>📋 Thông tin tài khoản</h3>
+                <p><strong>👤 Tài khoản:</strong> <span id="username">Đang tải...</span></p>
+                <p><strong>📧 Email:</strong> <span id="email">Đang tải...</span></p>
+                <p><strong>📱 Số điện thoại:</strong> <span id="phone">Đang tải...</span></p>
+                <p><strong>🏠 Địa chỉ:</strong> <span id="address">Đang tải...</span></p>
+                <p><strong>👥 Vai trò:</strong> <span id="role">Đang tải...</span></p>
             </div>
-
-            <div id="user-info" class="user-info" style="display: none;">
-                <h3>Thông Tin Tài Khoản</h3>
-                <p id="username">Đang tải...</p>
-                <p id="role">Đang tải...</p>
-            </div>
-
-            <div style="margin-top: 2rem;">
-                <button class="btn" onclick="goToProducts()">📦 Xem Sản Phẩm</button>
-                <button class="btn" onclick="goToProfile()">👤 Hồ Sơ</button>
-                <button class="btn btn-logout" onclick="logout()">🚪 Đăng Xuất</button>
+            
+            <div class="nav-links">
+                <a href="/static/products.html" class="btn btn-primary">🛒 Xem sản phẩm</a>
+                <a href="/static/profile.html" class="btn btn-secondary">⚙️ Cài đặt</a>
+                <button onclick="logout()" class="btn btn-danger">🚪 Đăng xuất</button>
             </div>
         </div>
+    </div>
 
-        <script>
-            // Hàm đọc cookie
-            function getCookie(name) {
-                const value = `; ${document.cookie}`;
-                const parts = value.split(`; ${name}=`);
-                if (parts.length === 2) return parts.pop().split(';').shift();
+    <script>
+        function getCookie(name) {
+            return document.cookie.split("; ").reduce((r, v) => {
+                const parts = v.split("=");
+                return parts[0] === name ? decodeURIComponent(parts[1]) : r;
+            }, "");
+        }
+
+        function setCookie(name, value, days) {
+            const expires = new Date(Date.now() + days * 864e5).toUTCString();
+            document.cookie = name + "=" + encodeURIComponent(value) + "; expires=" + expires + "; path=/";
+        }
+
+        function deleteCookie(name) {
+            document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        }
+
+        function logout() {
+            if (confirm("🤔 Bạn có chắc chắn muốn đăng xuất?")) {
+                deleteCookie("access_token");
+                deleteCookie("refresh_token");
+                deleteCookie("cart");
+                alert("👋 Đã đăng xuất thành công!");
+                window.location.href = "/static/landing_page.html";
+            }
+        }
+
+        // Simple JWT payload decoder (without verification)
+        function parseJWT(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                console.error('Error parsing JWT:', e);
+                return null;
+            }
+        }
+
+        async function loadUserInfo() {
+            const token = getCookie("access_token");
+            if (!token) {
+                alert("⚠️ Vui lòng đăng nhập lại!");
+                window.location.href = "/static/login.html";
+                return;
             }
 
-            // Hàm decode JWT payload (simple decode, không verify signature)
-            function decodeJWT(token) {
-                try {
-                    const base64Url = token.split('.')[1];
-                    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-                        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                    }).join(''));
-                    return JSON.parse(jsonPayload);
-                } catch (e) {
-                    console.error('Lỗi decode JWT:', e);
-                    return null;
-                }
+            console.log("🔑 Token found:", token ? "Yes" : "No");
+            
+            // Parse JWT to get username
+            const payload = parseJWT(token);
+            if (!payload || !payload.username) {
+                alert("❌ Token không hợp lệ. Vui lòng đăng nhập lại!");
+                window.location.href = "/static/login.html";
+                return;
             }
 
-            // Kiểm tra authentication khi load trang
-            window.onload = function() {
-                let token = getCookie('access_token');
-                console.log('111111', token)
-                const statusDiv = document.getElementById('status');
-                const userInfoDiv = document.getElementById('user-info');
+            console.log("👤 Username from token:", payload.username);
+            console.log("🌐 Using cookie authentication (not Bearer token)");
 
-                // ✅ Fallback: lấy token từ URL nếu không có trong cookie
-                // if (!token) {
-                //     const urlParams = new URLSearchParams(window.location.search);
-                //     token = urlParams.get('token');
-                //     console.log('lost token')
-                //     if (token) {
-                //         console.log('🔍 Token found in URL, setting cookie...');
-                //         document.cookie = `access_token=${token}; path=/; max-age=3600`;
-
-                //     }
-                // }
-
-                if (!token) {
-                    statusDiv.className = 'status error';
-                    statusDiv.innerHTML = '❌ Không tìm thấy token đăng nhập. <a href="/static/login.html">Đăng nhập lại</a>';
-                    return;
-                }
-
-                // Decode JWT để lấy thông tin user
-                const payload = decodeJWT(token);
+            try {
+                // Backend uses cookie authentication, not Bearer token
+                // Use /account/list endpoint which returns current user's account for non-admin users
+                console.log("🌐 Calling API: /account/list");
                 
-                if (payload) {
-                    // Kiểm tra token có hết hạn không
-                    const now = Math.floor(Date.now() / 1000);
-                    if (payload.exp && payload.exp < now) {
-                        statusDiv.className = 'status error';
-                        statusDiv.innerHTML = '⏰ Token đã hết hạn. <a href="/auth/google/login">Đăng nhập lại</a>';
+                const res = await fetch("/account/list?page_id=1&page_size=5", {
+                    method: "GET",
+                    headers: { 
+                        "Content-Type": "application/json"
+                    },
+                    credentials: 'include' // Include cookies for authentication
+                });
+
+                console.log("📡 Response status:", res.status);
+
+                if (!res.ok) {
+                    const errorText = await res.text();
+                    console.error("❌ API Error:", res.status, errorText);
+                    
+                    if (res.status === 401) {
+                        alert("🔒 Token đã hết hạn. Vui lòng đăng nhập lại!");
+                        deleteCookie("access_token");
+                        deleteCookie("refresh_token");
+                        window.location.href = "/static/login.html";
                         return;
                     }
-
-                    // Hiển thị thông tin thành công
-                    statusDiv.className = 'status success';
-                    statusDiv.innerHTML = '✅ Đăng nhập thành công!';
-
-                    // Hiển thị thông tin user
-                    userInfoDiv.style.display = 'block';
-                    document.getElementById('username').textContent = `👤 Username: ${payload.username || 'N/A'}`;
-                    document.getElementById('role').textContent = `🏷️ Vai trò: ${payload.role || 'N/A'}`;
-
-                    console.log('Thông tin JWT:', payload);
-                } else {
-                    statusDiv.className = 'status error';
-                    statusDiv.innerHTML = '❌ Token không hợp lệ. <a href="/auth/google/login">Đăng nhập lại</a>';
+                    
+                    throw new Error(`HTTP ${res.status}: ${errorText}`);
                 }
-            }
 
-            // Các hàm navigation
-            function goToProducts() {
-                window.location.href = '/static/products.html';
-            }
-
-            function goToProfile() {
-                window.location.href = '/profile.html';
-            }
-
-            function logout() {
-                // Xóa cookie
-                document.cookie = 'access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                const response = await res.json();
+                console.log("✅ Raw response received:", response);
+                console.log("✅ Response type:", Array.isArray(response) ? "Array" : "Object");
                 
-                // Redirect về trang login
-                alert('Đăng xuất thành công!');
-                window.location.href = '/static/login.html';
-            }
-
-            // Test function
-            function testAPI() {
-                const token = getCookie('access_token');
+                // Handle different response types
+                let user;
+                if (Array.isArray(response)) {
+                    // Admin gets array of accounts, we want the current user's account
+                    user = response.find(acc => acc.username === payload.username) || response[0];
+                    console.log("✅ Selected user from array:", user);
+                } else {
+                    // Regular user gets single account object
+                    user = response;
+                    console.log("✅ Single user object:", user);
+                }
                 
-                fetch('/api/test', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('API Response:', data);
-                    alert('API Test thành công! Xem console để biết chi tiết.');
-                })
-                .catch(error => {
-                    console.error('API Error:', error);
-                    alert('API Test thất bại! Xem console để biết chi tiết.');
+                // Display basic account info
+                document.getElementById("username").textContent = user.username || payload.username;
+                document.getElementById("email").textContent = "Đang tải...";
+                document.getElementById("phone").textContent = "Đang tải...";
+                document.getElementById("address").textContent = "Đang tải...";
+                document.getElementById("role").textContent = user.role || payload.role || "User";
+                
+                console.log("🔍 User object keys:", Object.keys(user));
+                console.log("🔍 User ID for account_info:", user.id);
+                console.log("🔍 User full object:", JSON.stringify(user, null, 2));
+                
+                // Load additional account info using token authentication
+                await loadAccountInfo(token, user.id);
+                
+            } catch (error) {
+                console.error("💥 Error loading user info:", error);
+                
+                // Show detailed error message
+                const errorMsg = error.message || "Lỗi không xác định";
+                document.getElementById("username").textContent = `❌ ${errorMsg}`;
+                document.getElementById("email").textContent = "Không thể tải";
+                document.getElementById("phone").textContent = "Không thể tải";
+                document.getElementById("address").textContent = "Không thể tải";
+                document.getElementById("role").textContent = "Không thể tải";
+                
+                // Show user-friendly alert
+                alert(`❌ Không thể tải thông tin tài khoản:\n${errorMsg}\n\nVui lòng kiểm tra kết nối mạng hoặc đăng nhập lại.`);
+            }
+        }
+
+        // Load additional account info (name, email, phone, address)
+        // Backend uses token authentication, so we don't need to pass ID in URL
+        async function loadAccountInfo(token, accountId) {
+            console.log(`🔍 loadAccountInfo called - using token auth (not URL params)`);
+            
+            try {
+                console.log(`🌐 Calling API: /account_info (token-based authentication)`);
+                
+                const res = await fetch('/profile', {
+                    method: "GET",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: 'include' // Uses cookie authentication
                 });
+
+                console.log(`📡 Response status: ${res.status}`);
+
+                if (res.ok) {
+                    const accountInfo = await res.json();
+                    console.log(`✅ SUCCESS with token-based auth:`, accountInfo);
+                    
+                    document.getElementById("email").textContent = accountInfo.email || "Chưa cập nhật";
+                    document.getElementById("phone").textContent = accountInfo.phone_number || "Chưa cập nhật"; 
+                    document.getElementById("address").textContent = accountInfo.address || "Chưa cập nhật";
+                    return;
+                } else {
+                    const errorText = await res.text();
+                    console.error(`❌ Token-based account_info failed: ${res.status} - ${errorText}`);
+                    
+                    if (res.status === 404) {
+                        document.getElementById("email").textContent = "📝 Chưa tạo account info";
+                        document.getElementById("phone").textContent = "📝 Chưa tạo account info";
+                        document.getElementById("address").textContent = "📝 Chưa tạo account info";
+                    } else if (res.status === 401 || res.status === 403) {
+                        document.getElementById("email").textContent = "🔒 Không có quyền truy cập";
+                        document.getElementById("phone").textContent = "🔒 Không có quyền truy cập";
+                        document.getElementById("address").textContent = "🔒 Không có quyền truy cập";
+                    } else {
+                        document.getElementById("email").textContent = `❌ Lỗi ${res.status}`;
+                        document.getElementById("phone").textContent = `❌ Lỗi ${res.status}`;
+                        document.getElementById("address").textContent = `❌ Lỗi ${res.status}`;
+                    }
+                }
+            } catch (error) {
+                console.error("❌ Error loading account info:", error);
+                document.getElementById("email").textContent = "❌ Lỗi kết nối";
+                document.getElementById("phone").textContent = "❌ Lỗi kết nối";
+                document.getElementById("address").textContent = "❌ Lỗi kết nối";
             }
-        </script>
-    </body>
-    </html> 
+        }
+
+
+
+        // Show account info setup message
+        function showAccountInfoSetup() {
+            // Create a notification in the user-info section
+            const userInfoDiv = document.querySelector('.user-info');
+            
+            // Remove existing setup message if any
+            const existingMsg = document.getElementById('setup-message');
+            if (existingMsg) {
+                existingMsg.remove();
+            }
+            
+            // Create setup message
+            const setupDiv = document.createElement('div');
+            setupDiv.id = 'setup-message';
+            setupDiv.className = 'alert alert-info';
+            setupDiv.innerHTML = `
+                <p><strong>📋 Thiết lập thông tin cá nhân</strong></p>
+                <p>Bạn chưa thiết lập thông tin cá nhân (email, số điện thoại, địa chỉ).</p>
+                <div style="margin-top: 10px;">
+                    <a href="/static/info.html" class="btn btn-primary" style="display: inline-block; margin-right: 10px;">
+                        ✏️ Thiết lập ngay
+                    </a>
+                    <button onclick="this.parentElement.parentElement.remove()" class="btn btn-secondary" style="display: inline-block;">
+                        ⏭️ Bỏ qua
+                    </button>
+                </div>
+            `;
+            
+            // Insert after user-info div
+            userInfoDiv.insertAdjacentElement('afterend', setupDiv);
+        }
+
+
+
+        // Load user info when page loads
+        loadUserInfo();
+    </script>
+</body>
+</html> 

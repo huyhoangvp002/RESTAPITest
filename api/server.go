@@ -73,9 +73,9 @@ func (server *Server) setUpRouter() {
 	authRoutes.GET("/accounts", server.GetAccountByUsername)
 	authRoutes.GET("/products/all", server.ListProducts)
 	authRoutes.GET("/account/list", roleMiddleware("admin"), server.ListAccounts)
-	authRoutes.GET("/account_info", server.GetAccountInfo)
 	authRoutes.GET("/cart", server.ShowCart)
 	authRoutes.GET("/categories/all", server.ListCategories)
+	authRoutes.GET("/profile", server.GetAccountInfo)
 
 	authRoutes.PATCH("/products/:id", server.UdateProduct)
 	authRoutes.PATCH("/cart/:id", server.UpdateProductInCart)

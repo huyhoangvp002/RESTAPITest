@@ -197,44 +197,22 @@ func (server *Server) UpdateAccountInfo(ctx *gin.Context) {
 }
 
 func (server *Server) GetAccountInfo(ctx *gin.Context) {
-	var req IDRequest
-	if err := ctx.ShouldBindUri(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
 
 	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
 
-	if authPayload.Role == "admin" {
-		account_info, err := server.store.GetAccountInfo(ctx, req.ID)
-		if err != nil {
-			if err != sql.ErrNoRows {
-				ctx.JSON(http.StatusNotFound, errorResponse(err))
-				return
-			}
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-			return
-		}
-		ctx.JSON(http.StatusOK, account_info)
-		return
-	}
-
-	accountID, err := server.store.GetAccountID(ctx, req.ID)
+	accountID, err := server.store.GetAccountIDByUsername(ctx, authPayload.Username)
 	if err != nil {
-		if err != sql.ErrNoRows {
+		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
 			return
 		}
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	if accountID != req.ID {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"err": "Permission Deny!"})
-		return
-	}
-	account_info, err := server.store.GetAccountInfo(ctx, req.ID)
+
+	account_info, err := server.store.GetAccountInfoByAccountID(ctx, accountID)
 	if err != nil {
-		if err != sql.ErrNoRows {
+		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
 			return
 		}

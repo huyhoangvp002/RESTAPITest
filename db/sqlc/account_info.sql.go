@@ -113,6 +113,26 @@ func (q *Queries) GetAccountInfo(ctx context.Context, id int64) (AccountInfo, er
 	return i, err
 }
 
+const getAccountInfoByAccountID = `-- name: GetAccountInfoByAccountID :one
+SELECT id, account_id, name, email, phone_number, address, created_at, updated_at FROM account_info WHERE account_id = $1
+`
+
+func (q *Queries) GetAccountInfoByAccountID(ctx context.Context, accountID int64) (AccountInfo, error) {
+	row := q.db.QueryRowContext(ctx, getAccountInfoByAccountID, accountID)
+	var i AccountInfo
+	err := row.Scan(
+		&i.ID,
+		&i.AccountID,
+		&i.Name,
+		&i.Email,
+		&i.PhoneNumber,
+		&i.Address,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getAddressForShipment = `-- name: GetAddressForShipment :one
 SELECT address FROM account_info WHERE account_id = $1
 `

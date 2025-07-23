@@ -1,119 +1,107 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <title>Thông tin cá nhân</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f2f2f2;
-      padding: 30px;
-    }
-
-    .form-container {
-      background-color: white;
-      max-width: 600px;
-      margin: auto;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-
-    h2 {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-
-    label {
-      display: block;
-      margin-top: 15px;
-      font-weight: bold;
-    }
-
-    input, textarea {
-      width: 100%;
-      padding: 10px;
-      margin-top: 5px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-    }
-
-    button {
-      margin-top: 25px;
-      width: 100%;
-      padding: 12px;
-      background-color: #4CAF50;
-      color: white;
-      font-size: 16px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #45a049;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📋 Thông tin cá nhân</title>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
+    <div class="page-container">
+        <div class="card">
+            <h1 class="title">📋 Thông tin cá nhân</h1>
+            <p class="subtitle">Vui lòng cập nhật thông tin cá nhân của bạn</p>
+            
+            <form class="form" id="info-form">
+                <div class="form-group">
+                    <label for="name">Họ và tên:</label>
+                    <input type="text" id="name" name="name" class="form-input" placeholder="Nhập họ và tên" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" class="form-input" placeholder="Nhập email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone">Số điện thoại:</label>
+                    <input type="text" id="phone" name="phone_number" class="form-input" placeholder="Nhập số điện thoại" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="address">Địa chỉ:</label>
+                    <input type="text" id="address" name="address" class="form-input" placeholder="Nhập địa chỉ">
+                </div>
+                
+                <button type="submit" class="btn btn-success btn-full">
+                    <span class="btn-text">💾 Lưu thông tin</span>
+                    <span class="loading" id="loading" style="display: none;"></span>
+                </button>
+            </form>
+            
+            <div class="nav-links">
+                <a href="/static/home.html">🏠 Về trang chủ</a>
+                <a href="/static/products.html">🛒 Xem sản phẩm</a>
+            </div>
+        </div>
+    </div>
 
-  <div class="form-container">
-    <h2>Nhập thông tin cá nhân</h2>
-
-    <form id="info-form">
-      <label for="name">Họ và tên:</label>
-      <input type="text" id="name" name="name" required>
-
-      <label for="email">Email:</label>
-      <input type="email" id="email" name="email" required>
-
-      <label for="phone">Số điện thoại:</label>
-      <input type="text" id="phone" name="phone_number" required>
-
-      <label for="address">Địa chỉ:</label>
-      <input type="text" id="address" name="address">
-
-      <button type="submit">Gửi thông tin</button>
-    </form>
-  </div>
-
-  <script>
-    document.getElementById("info-form").addEventListener("submit", async function(e) {
-      e.preventDefault();
-
-      const payload = {
-        name: document.getElementById("name").value,
-        email: document.getElementById("email").value,
-        phone_number: document.getElementById("phone").value,
-        address: document.getElementById("address").value
-      };
-
-      try {
-        const response = await fetch("http://localhost:8080/create_info", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(payload),
-          credentials: "include" // Gửi cookie JWT nếu đang dùng
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          alert("Lỗi: " + (data.error || "Không rõ"));
-          return;
+    <script>
+        function getCookie(name) {
+            return document.cookie.split("; ").reduce((r, v) => {
+                const parts = v.split("=");
+                return parts[0] === name ? decodeURIComponent(parts[1]) : r;
+            }, "");
         }
 
-        // ✅ Nếu thành công thì chuyển sang home.html
-        window.location.href = "/static/home.html";
+        document.getElementById("info-form").addEventListener("submit", async function(e) {
+            e.preventDefault();
+            
+            const loading = document.getElementById("loading");
+            const btnText = document.querySelector(".btn-text");
+            
+            // Show loading
+            loading.style.display = "inline-block";
+            btnText.style.display = "none";
 
-      } catch (err) {
-        console.error("Lỗi gửi thông tin:", err);
-        alert("Không thể kết nối tới server!");
-      }
-    });
-  </script>
+            const payload = {
+                name: document.getElementById("name").value,
+                email: document.getElementById("email").value,
+                phone_number: document.getElementById("phone").value,
+                address: document.getElementById("address").value
+            };
 
+            try {
+                const token = getCookie("access_token");
+                const response = await fetch("/create_info", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                // Hide loading
+                loading.style.display = "none";
+                btnText.style.display = "inline";
+
+                if (!response.ok) {
+                    const data = await response.json();
+                    alert("❌ Lỗi: " + (data.error || "Không rõ"));
+                    return;
+                }
+
+                alert("✅ Lưu thông tin thành công!");
+                window.location.href = "/static/home.html";
+
+            } catch (err) {
+                loading.style.display = "none";
+                btnText.style.display = "inline";
+                console.error("Lỗi gửi thông tin:", err);
+                alert("❌ Không thể kết nối tới server!");
+            }
+        });
+    </script>
 </body>
 </html>

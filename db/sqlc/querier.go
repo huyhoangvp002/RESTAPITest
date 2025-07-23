@@ -36,6 +36,7 @@ type Querier interface {
 	GetAccountIDByUsername(ctx context.Context, username string) (int64, error)
 	GetAccountIDbyProductID(ctx context.Context, id int64) (int64, error)
 	GetAccountInfo(ctx context.Context, id int64) (AccountInfo, error)
+	GetAccountInfoByAccountID(ctx context.Context, accountID int64) (AccountInfo, error)
 	GetAddressForShipment(ctx context.Context, accountID int64) (string, error)
 	GetBuyerIDByOrderID(ctx context.Context, id int64) (int64, error)
 	GetCartItem(ctx context.Context, id int64) (CartItem, error)

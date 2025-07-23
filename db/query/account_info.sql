@@ -61,3 +61,6 @@ SELECT EXISTS (
 -- name: GetAccountIDByEmail :one
 SELECT account_id FROM account_info WHERE email =$1;
 
+-- name: GetAccountInfoByAccountID :one
+SELECT * FROM account_info WHERE account_id = $1;
+

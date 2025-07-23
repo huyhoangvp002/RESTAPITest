@@ -1,58 +1,107 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <title>Đăng ký tài khoản</title>
-  <style>
-    body { font-family: Arial; max-width: 400px; margin: 40px auto; }
-    input, button { width: 100%; margin: 8px 0; padding: 10px; }
-    button { background-color: green; color: white; border: none; cursor: pointer; }
-    button:hover { background-color: darkgreen; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng ký tài khoản</title>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-  <h2>Đăng ký tài khoản</h2>
-  <form id="registerForm">
-    <input type="text" id="username" placeholder="Tài khoản" required />
-    <input type="password" id="password" placeholder="Mật khẩu" required />
-    <input type="text" id="name" placeholder="Họ tên" required />
-    <input type="email" id="email" placeholder="Email" required />
-    <input type="text" id="phone_number" placeholder="Số điện thoại" required />
-    <input type="text" id="address" placeholder="Địa chỉ" required />
-    <button type="submit">Đăng ký</button>
-  </form>
+    <div class="page-container">
+        <div class="card">
+            <h1 class="title">📝 Đăng ký tài khoản</h1>
+            <p class="subtitle">Tạo tài khoản mới để bắt đầu!</p>
+            
+            <form class="form" id="registerForm">
+                <div class="form-group">
+                    <label for="username">Tài khoản:</label>
+                    <input type="text" id="username" class="form-input" placeholder="Tài khoản" required />
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Mật khẩu:</label>
+                    <input type="password" id="password" class="form-input" placeholder="Mật khẩu" required />
+                </div>
+                
+                <div class="form-group">
+                    <label for="name">Họ tên:</label>
+                    <input type="text" id="name" class="form-input" placeholder="Họ tên" required />
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" class="form-input" placeholder="Email" required />
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone_number">Số điện thoại:</label>
+                    <input type="text" id="phone_number" class="form-input" placeholder="Số điện thoại" required />
+                </div>
+                
+                <div class="form-group">
+                    <label for="address">Địa chỉ:</label>
+                    <input type="text" id="address" class="form-input" placeholder="Địa chỉ" required />
+                </div>
+                
+                <button type="submit" class="btn btn-success btn-full">
+                    <span class="btn-text">Đăng ký</span>
+                    <span class="loading" id="loading" style="display: none;"></span>
+                </button>
+            </form>
+            
+            <div class="nav-links">
+                <a href="/static/login.html">Đã có tài khoản? Đăng nhập</a>
+                <a href="/static/landing_page.html">Trang chủ</a>
+            </div>
+        </div>
+    </div>
 
-  <script>
-    document.getElementById("registerForm").addEventListener("submit", function (e) {
-      e.preventDefault();
+    <script>
+        document.getElementById("registerForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+            
+            const loading = document.getElementById("loading");
+            const btnText = document.querySelector(".btn-text");
+            
+            // Show loading
+            loading.style.display = "inline-block";
+            btnText.style.display = "none";
 
-      const data = {
-        username: document.getElementById("username").value,
-        password: document.getElementById("password").value,
-        name: document.getElementById("name").value,
-        email: document.getElementById("email").value,
-        phone_number: document.getElementById("phone_number").value,
-        address: document.getElementById("address").value
-      };
+            const data = {
+                username: document.getElementById("username").value,
+                password: document.getElementById("password").value,
+                name: document.getElementById("name").value,
+                email: document.getElementById("email").value,
+                phone_number: document.getElementById("phone_number").value,
+                address: document.getElementById("address").value
+            };
 
-      fetch("http://localhost:8080/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      })
-        .then(async (res) => {
-          if (!res.ok) {
-            const err = await res.text();
-            alert("Lỗi đăng ký: " + err);
-            return;
-          }
-          alert("Đăng ký thành công!");
-          window.location.href = "/static/login.html"; // bạn có thể đổi thành home.html
-        })
-        .catch((err) => {
-          alert("Không thể kết nối tới server: " + err);
+            fetch("/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            })
+            .then(async (res) => {
+                // Hide loading
+                loading.style.display = "none";
+                btnText.style.display = "inline";
+                
+                if (!res.ok) {
+                    const err = await res.text();
+                    alert("❌ Lỗi đăng ký: " + err);
+                    return;
+                }
+                
+                alert("✅ Đăng ký thành công!");
+                window.location.href = "/static/login.html";
+            })
+            .catch(err => {
+                loading.style.display = "none";
+                btnText.style.display = "inline";
+                console.error("Network error:", err);
+                alert("❌ Lỗi kết nối mạng!");
+            });
         });
-    });
-  </script>
+    </script>
 </body>
 </html>

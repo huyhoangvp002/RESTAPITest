@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 API Test Tool</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="page-container">
+        <div class="card">
+            <h1 class="title">🔧 API Test Tool</h1>
+            <p class="subtitle">Kiểm tra các API endpoints</p>
+            
+            <div class="test-results" id="test-results">
+                <div class="loading-container">
+                    <div class="loading"></div>
+                    <p>Đang kiểm tra API endpoints...</p>
+                </div>
+            </div>
+            
+            <div class="nav-links">
+                <a href="/static/home.html">🏠 Về trang chủ</a>
+                <button onclick="runTests()" class="btn btn-primary">🔄 Chạy lại test</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function getCookie(name) {
+            return document.cookie.split("; ").reduce((r, v) => {
+                const parts = v.split("=");
+                return parts[0] === name ? decodeURIComponent(parts[1]) : r;
+            }, "");
+        }
+
+        async function testEndpoint(endpointConfig) {
+            const token = getCookie("access_token");
+            const { url, method = "GET", auth = true, body = null } = endpointConfig;
+            
+            try {
+                const headers = { "Content-Type": "application/json" };
+                if (auth && token) {
+                    headers["Authorization"] = `Bearer ${token}`;
+                }
+                
+                const requestConfig = {
+                    method: method,
+                    headers: headers
+                };
+
+                if (body && (method === "POST" || method === "PUT" || method === "PATCH")) {
+                    requestConfig.body = JSON.stringify(body);
+                }
+                
+                const response = await fetch(url, requestConfig);
+                
+                const contentType = response.headers.get("content-type");
+                let data;
+                
+                if (contentType && contentType.includes("application/json")) {
+                    data = await response.json();
+                } else {
+                    data = await response.text();
+                }
+                
+                return {
+                    endpoint: `${method} ${url}`,
+                    status: response.status,
+                    ok: response.ok,
+                    data: data,
+                    headers: Object.fromEntries(response.headers),
+                    error: null
+                };
+            } catch (error) {
+                return {
+                    endpoint: `${method} ${url}`,
+                    status: 0,
+                    ok: false,
+                    data: null,
+                    headers: {},
+                    error: error.message
+                };
+            }
+        }
+
+        async function runTests() {
+            const resultsDiv = document.getElementById("test-results");
+            const token = getCookie("access_token");
+            
+            resultsDiv.innerHTML = `
+                <div class="loading-container">
+                    <div class="loading"></div>
+                    <p>Đang kiểm tra API endpoints...</p>
+                </div>
+            `;
+            
+            // Test endpoints based on actual backend routes
+            const endpoints = [
+                { url: "/accounts", method: "POST", auth: true, body: { username: "test", password: "dummy" } },
+                { url: "/account_info/1", method: "GET", auth: true },
+                { url: "/login", method: "POST", auth: false, body: { username: "test", password: "test" } },
+                { url: "/register", method: "POST", auth: false, body: { username: "test", password: "test123", name: "Test", email: "test@test.com", phone_number: "0123456789", address: "Test Address" } },
+                { url: "/categories/all?page_id=1&page_size=5", method: "GET", auth: false },
+                { url: "/products/all?page_id=1&page_size=5", method: "GET", auth: false },
+                { url: "/cart?page_id=1&page_size=5", method: "GET", auth: true },
+                { url: "/account/list?page_id=1&page_size=5", method: "GET", auth: true }
+            ];
+            
+            const results = [];
+            
+            for (const endpoint of endpoints) {
+                console.log(`Testing: ${endpoint.method || 'GET'} ${endpoint.url}`);
+                const result = await testEndpoint(endpoint);
+                results.push(result);
+            }
+            
+            // Display results
+            let html = `
+                <div class="test-info">
+                    <h3>🔑 Authentication Status</h3>
+                    <p><strong>Token found:</strong> ${token ? "✅ Yes" : "❌ No"}</p>
+                    ${token ? `<p><strong>Token preview:</strong> ${token.substring(0, 50)}...</p>` : ""}
+                </div>
+                
+                <div class="test-info">
+                    <h3>📊 API Test Results</h3>
+                    <div class="endpoint-results">
+            `;
+            
+            results.forEach(result => {
+                const statusClass = result.ok ? "success" : result.error ? "error" : "warning";
+                const statusIcon = result.ok ? "✅" : result.error ? "❌" : "⚠️";
+                
+                html += `
+                    <div class="endpoint-result ${statusClass}">
+                        <div class="endpoint-header">
+                            ${statusIcon} <strong>${result.endpoint}</strong>
+                            <span class="status-code">HTTP ${result.status || "ERR"}</span>
+                        </div>
+                        <div class="endpoint-details">
+                            ${result.error ? 
+                                `<p class="error-msg">Error: ${result.error}</p>` : 
+                                `<p class="success-msg">Response: ${JSON.stringify(result.data).substring(0, 100)}${JSON.stringify(result.data).length > 100 ? '...' : ''}</p>`
+                            }
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `
+                    </div>
+                </div>
+                
+                <div class="test-info">
+                    <h3>💡 Troubleshooting</h3>
+                    <ul>
+                        <li>Nếu tất cả endpoints đều lỗi → Kiểm tra server có đang chạy không</li>
+                        <li>Nếu chỉ các endpoint cần auth lỗi → Token có thể hết hạn</li>
+                        <li>Nếu 404 errors → Endpoint có thể đã thay đổi</li>
+                        <li>Nếu CORS errors → Kiểm tra server CORS settings</li>
+                    </ul>
+                </div>
+            `;
+            
+            resultsDiv.innerHTML = html;
+        }
+        
+        // Run tests on page load
+        runTests();
+    </script>
+</body>
+</html> 
