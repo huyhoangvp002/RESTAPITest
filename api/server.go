@@ -51,9 +51,9 @@ func (server *Server) setUpRouter() {
 
 	// === Rate limiter setup (per-IP token bucket) ===
 	// Bạn có thể điều chỉnh các giá trị này từ server.config nếu muốn.
-	capacity := 10.0                   // tối đa token
-	refillRate := 1.0                  // token nạp lại mỗi giây
-	tokensCost := 1.0                  // mỗi request tốn bao nhiêu token
+	capacity := 50.0                   // tối đa token
+	refillRate := 10.0                 // token nạp lại mỗi giây
+	tokensCost := 5.0                  // mỗi request tốn bao nhiêu token
 	cleanupInterval := 5 * time.Minute // chu kỳ dọn dẹp bucket
 
 	// map lưu bucket theo IP và mutex bảo vệ
