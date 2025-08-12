@@ -6,23 +6,41 @@
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-  <header>
-    <div class="nav-left">
-      <img src="/static/images/logo.png" alt="Logo">
-      <a href="/static/home.html">Trang chủ</a>
-      <a href="/products">Sản phẩm</a>
-      <a href="/static/profile.html">Tài khoản</a>
-    </div>
-    <div>
-      <img src="/static/images/cart.png" class="cart-icon" alt="Giỏ hàng">
-      <span id="cart-count">(0)</span>
-    </div>
+  <!-- Header mới cho products.html -->
+  <header style="display: flex; align-items: center; justify-content: flex-start; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); padding: 14px 32px; border-radius: 0 0 18px 18px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 32px; gap: 32px;">
+      <!-- Logo -->
+      <div style="display: flex; align-items: center; gap: 12px; cursor: pointer;" onclick="window.location.href='/static/home.html'">
+          <img src="/static/images/logo.png" alt="Logo" style="height: 38px; width: 38px; border-radius: 8px; background: #fff;">
+          <span style="color: #fff; font-size: 1.3em; font-weight: bold; letter-spacing: 1px;">Trang chủ</span>
+      </div>
+      <!-- Danh mục -->
+      <nav style="display: flex; align-items: center;">
+          <div style="position: relative;">
+              <button id="category-btn" style="background: #eebbc3; color: #232946; font-weight: 600; border: none; border-radius: 8px; padding: 10px 22px; font-size: 1em; cursor: pointer;">Danh mục ▼</button>
+              <ul id="category-list" style="display: none; position: absolute; left: 0; top: 110%; background: #fff; color: #232946; min-width: 180px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); border-radius: 8px; list-style: none; margin: 0; padding: 8px 0; z-index: 100;">
+                  <li style="padding: 10px 18px; cursor: pointer;" onclick="window.location.href='/static/products.html'">Tất cả sản phẩm</li>
+                  <!-- Categories sẽ được render động ở đây -->
+              </ul>
+          </div>
+      </nav>
+      <!-- Tài khoản -->
+      <div style="position: relative; margin-left: auto;">
+          <img src="/static/images/default.jpg" alt="Avatar" id="account-avatar" style="height: 38px; width: 38px; border-radius: 50%; object-fit: cover; cursor: pointer; border: 2px solid #eebbc3;">
+          <div id="account-dropdown" style="display: none; position: absolute; right: 0; top: 110%; background: #fff; color: #232946; min-width: 180px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); border-radius: 8px; padding: 12px 0; z-index: 100;">
+              <div style="padding: 10px 18px; font-weight: 600;">👤 <span id="dropdown-username">Tài khoản</span></div>
+              <div style="padding: 10px 18px; cursor: pointer;" onclick="window.location.href='/static/profile.html'">Thông tin cá nhân</div>
+              <div style="padding: 10px 18px; cursor: pointer; color: #e74c3c; font-weight: 600;" onclick="logout()">Đăng xuất</div>
+          </div>
+      </div>
+      <!-- Giỏ hàng -->
+      <div style="margin-left: 24px; position: relative;">
+          <img src="/static/images/cart.png" class="cart-icon" alt="Giỏ hàng" style="height: 32px; width: 32px; cursor: pointer;" onclick="window.location.href='/static/cart.html'">
+          <span id="cart-count" style="position: absolute; top: -8px; right: -12px; background: #e74c3c; color: #fff; font-size: 0.95em; font-weight: bold; border-radius: 50%; padding: 2px 8px;">(0)</span>
+      </div>
   </header>
 
-  <div class="filter-section">
-    <label for="categorySelect">Lọc theo danh mục:</label>
-    <select id="categorySelect"></select>
-  </div>
+<!-- XÓA PHẦN LỌC DANH MỤC Ở DƯỚI (nếu có) -->
+<!-- Tìm và xóa toàn bộ khối: <div ...>Lọc theo danh mục ... </div> -->
 
   <div id="productList"></div>
 
@@ -30,7 +48,7 @@
     function setCookie(name, value, days = 7) {
       const expires = new Date(Date.now() + days * 864e5).toUTCString();
       document.cookie = name + "=" + encodeURIComponent(value) + "; expires=" + expires + "; path=/";
-    }
+    }-
 
     function getCookie(name) {
       return document.cookie.split("; ").reduce((r, v) => {
@@ -50,31 +68,8 @@
     }
 
     async function loadCategories() {
-      try {
-        const res = await fetch('/categories/all?page_id=1&page_size=10');
-        const data = await res.json();
-        const select = document.getElementById("categorySelect");
-
-        const all = document.createElement("option");
-        all.value = "";
-        all.textContent = "Tất cả danh mục";
-        select.appendChild(all);
-
-        data.forEach(c => {
-          const opt = document.createElement("option");
-          opt.value = c.id;
-          opt.textContent = c.name;
-          select.appendChild(opt);
-        });
-
-        select.addEventListener("change", () => {
-          loadProducts(select.value);
-        });
-
-        loadProducts();
-      } catch (err) {
-        console.error("Lỗi tải danh mục:", err);
-      }
+      // Không cần fetch danh mục cho dropdown dưới nữa
+      loadProducts();
     }
 
     async function loadProducts(categoryId = "") {
@@ -150,6 +145,47 @@
       document.body.appendChild(box);
     }
 
+    // Dropdown danh mục
+    document.addEventListener('DOMContentLoaded', function() {
+        const btn = document.getElementById('category-btn');
+        const list = document.getElementById('category-list');
+        btn.onclick = function(e) {
+            e.stopPropagation();
+            list.style.display = list.style.display === 'block' ? 'none' : 'block';
+        };
+        document.body.onclick = function() { list.style.display = 'none'; };
+        // Fetch categories
+        fetch('/categories/all', { credentials: 'include' })
+            .then(res => res.json())
+            .then(data => {
+                if (Array.isArray(data)) {
+                    data.forEach(cat => {
+                        const li = document.createElement('li');
+                        li.textContent = cat.name;
+                        li.style.padding = '10px 18px';
+                        li.style.cursor = 'pointer';
+                        li.onclick = () => window.location.href = `/static/products.html?category=${encodeURIComponent(cat.name)}`;
+                        list.appendChild(li);
+                    });
+                }
+            });
+    });
+    // Dropdown tài khoản
+    document.getElementById('account-avatar').onclick = function(e) {
+        e.stopPropagation();
+        const dropdown = document.getElementById('account-dropdown');
+        dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+    };
+    document.body.onclick = function() {
+        document.getElementById('account-dropdown').style.display = 'none';
+        const list = document.getElementById('category-list');
+        if (list) list.style.display = 'none';
+    };
+    // Set username in dropdown sau khi loadUserInfo
+    function setDropdownUsername(name) {
+        document.getElementById('dropdown-username').textContent = name;
+    }
+    // Gọi hàm này trong loadUserInfo sau khi lấy được username
     loadCategories();
     updateCartCount();
   </script>

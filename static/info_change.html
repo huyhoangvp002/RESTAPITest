@@ -29,7 +29,7 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="phone">Số điện thoại</label>
-                    <input class="form-input" type="text" id="phone" name="phone" required>
+                    <input class="form-input" type="text" id="phone" name="phone">
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="address">Địa chỉ</label>
@@ -41,8 +41,6 @@
         </div>
     </div>
     <script>
-        let accountInfoId = null;
-
         // Hiển thị thông báo
         function showAlert(msg, type = 'success') {
             const alertDiv = document.getElementById('alert');
@@ -60,8 +58,6 @@
                 });
                 if (!res.ok) throw new Error('Không thể tải thông tin cá nhân!');
                 const info = await res.json();
-                // Lưu lại id để PATCH
-                accountInfoId = info.id || info.account_id;
                 document.getElementById('name').value = info.name || '';
                 document.getElementById('email').value = info.email || '';
                 document.getElementById('phone').value = info.phone_number || '';
@@ -74,10 +70,6 @@
         // Gửi PATCH để cập nhật thông tin
         document.getElementById('infoForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            if (!accountInfoId) {
-                showAlert('Không tìm thấy ID thông tin cá nhân!', 'error');
-                return;
-            }
             const data = {
                 name: document.getElementById('name').value,
                 email: document.getElementById('email').value,
@@ -85,7 +77,7 @@
                 address: document.getElementById('address').value
             };
             try {
-                const res = await fetch(`/account_info/${accountInfoId}`, {
+                const res = await fetch(`/account_info`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',

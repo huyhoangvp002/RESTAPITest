@@ -5,6 +5,7 @@ import (
 	"RESTAPITest/token"
 	"RESTAPITest/util"
 	"database/sql"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -282,4 +283,27 @@ func (server *Server) LogOut(ctx *gin.Context) {
 
 func (server *Server) redirect(ctx *gin.Context) {
 	ctx.Redirect(http.StatusTemporaryRedirect, "/static/landing_page.html")
+}
+
+type AccountByIDRequest struct {
+	ID int `form:"id" binding:"required"`
+}
+
+func (server *Server) AccountByID(ctx *gin.Context) {
+	var req AccountByIDRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	fmt.Println("[DEBUG] ID:", req.ID)
+	account, err := server.store.GetAccountByID(ctx, int64(req.ID))
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	ctx.JSON(http.StatusOK, account)
 }

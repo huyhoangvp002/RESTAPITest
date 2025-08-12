@@ -1,0 +1,99 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      # DB connection mà test và app của bạn sẽ sử dụng
+      DATABASE_URL: postgres://postgres:password@localhost:5432/testdb?sslmode=disable
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'    # chỉnh theo phiên bản Go project bạn dùng
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Wait for Postgres to be ready
+        # `pg_isready` không có sẵn, nhưng psql client có; cài postgresql-client nhanh
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+          for i in {1..30}; do
+            pg_isready -h localhost -p 5432 -U postgres && break
+            echo "waiting for postgres..."
+            sleep 1
+          done
+        env:
+          PGPASSWORD: password
+
+      - name: Install sqlc (if your repo uses sqlc)
+        # chỉ chạy khi bạn cần sqlc generate; nếu đã commit generated code, có thể skip
+        run: |
+          SQLC_VER="v1.23.0" # chỉnh phiên bản nếu cần
+          curl -sSL "https://github.com/kyleconroy/sqlc/releases/download/${SQLC_VER}/sqlc_${SQLC_VER#v}_linux_amd64.tar.gz" \
+            | tar -xz
+          sudo mv sqlc /usr/local/bin/
+
+      - name: Generate sqlc code
+        # Chỉ cần nếu bạn chưa commit code generate hoặc muốn regenerate
+        run: sqlc generate
+        # nếu repo đã có code generated, bạn có thể comment bỏ bước này
+
+      - name: Run DB migrations
+        # Tùy repository - chỉnh path file sql migration của bạn
+        run: |
+          export PGPASSWORD=password
+          # tạo extension nếu migration cần
+          psql -h localhost -U postgres -d testdb -c "CREATE EXTENSION IF NOT EXISTS pgcrypto;" || true
+          # chạy file migration (ví dụ path db/migration/init.sql)
+          if [ -f "db/migration/up.sql" ]; then
+            psql -h localhost -U postgres -d testdb -f db/migration/up.sql
+          fi
+          # nếu bạn có nhiều file trong db/migration, lặp qua hoặc dùng migrate tool
+        env:
+          PGPASSWORD: password
+
+      - name: Run tests
+        run: |
+          go test ./... -v
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+
+      - name: Run vet and lint (optional)
+        run: |
+          go vet ./...
+          # bạn có thể chạy golangci-lint nếu đã cài đặt
