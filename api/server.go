@@ -7,8 +7,6 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
-	"sync"
-	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -49,64 +47,7 @@ func (server *Server) setUpRouter() {
 	router.Static("/static", "./static")
 	router.Use(cors.Default())
 
-	// === Rate limiter setup (per-IP token bucket) ===
-	// Bạn có thể điều chỉnh các giá trị này từ server.config nếu muốn.
-	capacity := 50.0                   // tối đa token
-	refillRate := 10.0                 // token nạp lại mỗi giây
-	tokensCost := 5.0                  // mỗi request tốn bao nhiêu token
-	cleanupInterval := 5 * time.Minute // chu kỳ dọn dẹp bucket
-
-	// map lưu bucket theo IP và mutex bảo vệ
-	buckets := make(map[string]*token.TokenBucket)
-	var bucketsMu sync.Mutex
-
-	// Goroutine dọn dẹp bucket "không hoạt động"
-	go func() {
-		ticker := time.NewTicker(cleanupInterval)
-		defer ticker.Stop()
-		for range ticker.C {
-			now := time.Now()
-			bucketsMu.Lock()
-			for ip, b := range buckets {
-				// nếu bucket lâu không refill (không hoạt động) thì xóa
-				if now.Sub(b.GetLastRefill()) > 2*cleanupInterval {
-					delete(buckets, ip)
-				}
-			}
-			bucketsMu.Unlock()
-		}
-	}()
-
-	// actual middleware
-	rateLimitMiddleware := func(c *gin.Context) {
-		clientIP := c.ClientIP()
-
-		// get or create bucket
-		bucketsMu.Lock()
-		b, ok := buckets[clientIP]
-		if !ok {
-			b = token.NewTokenBucket(capacity, refillRate)
-			buckets[clientIP] = b
-		}
-		bucketsMu.Unlock()
-
-		// Allow?
-		if !b.Allow(tokensCost) {
-			// thông báo Retry-After (đặt 1s ở đây, bạn có thể sửa)
-			c.Header("Retry-After", "1")
-			c.JSON(http.StatusTooManyRequests, gin.H{
-				"error":   "Too many requests",
-				"message": "Vượt quá giới hạn request. Vui lòng thử lại sau.",
-			})
-			c.Abort()
-			return
-		}
-
-		c.Next()
-	}
-
-	// Áp dụng rate limiter cho toàn bộ router
-	router.Use(rateLimitMiddleware)
+	router.Use(NewRateLimiter().RateLimitMiddleware(300, 4, 10))
 
 	// === End rate limiter setup ===
 

@@ -95,45 +95,45 @@ func roleMiddleware(roles ...string) gin.HandlerFunc {
 }
 
 type RateLimiter struct {
-	buckets map[string]*token.TokenBucket
+	buckets map[compositeKey]*token.TokenBucket
 	mutex   sync.Mutex
-	config  RateConfig
 }
 
-// RateConfig cấu hình rate limit
-type RateConfig struct {
-	Capacity   float64       // Số token tối đa
-	RefillRate float64       // Token nạp lại mỗi giây
-	TokensCost float64       // Số token tốn mỗi request
-	Cleanup    time.Duration // Chu kỳ dọn dẹp bucket
+// compositeKey kết hợp IP + Method + Path
+type compositeKey struct {
+	IP     string
+	Method string
+	Path   string
 }
 
-// NewRateLimiter khởi tạo rate limiter
-func NewRateLimiter(config RateConfig) *RateLimiter {
-	rl := &RateLimiter{
-		buckets: make(map[string]*token.TokenBucket),
-		config:  config,
+// NewRateLimiter tạo rate limiter mới
+func NewRateLimiter() *RateLimiter {
+	return &RateLimiter{
+		buckets: make(map[compositeKey]*token.TokenBucket),
 	}
-
-	// Bắt đầu dọn dẹp định kỳ
-	go rl.startCleanup()
-	return rl
 }
 
-// Middleware gin
-func (rl *RateLimiter) Middleware() gin.HandlerFunc {
+// Middleware factory tạo middleware với cấu hình riêng
+func (rl *RateLimiter) RateLimitMiddleware(capacity, tokenCost, refillRate float64) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		clientIP := c.ClientIP()
+		// Tạo composite key duy nhất cho mỗi client + endpoint
+		key := compositeKey{
+			IP:     c.ClientIP(),
+			Method: c.Request.Method,
+			Path:   c.FullPath(), // Lấy path đã đăng ký trong router
+		}
 
+		// Lấy hoặc tạo bucket
 		rl.mutex.Lock()
-		bucket, exists := rl.buckets[clientIP]
+		bucket, exists := rl.buckets[key]
 		if !exists {
-			bucket = token.NewTokenBucket(rl.config.Capacity, rl.config.RefillRate)
-			rl.buckets[clientIP] = bucket
+			bucket = token.NewTokenBucket(capacity, refillRate)
+			rl.buckets[key] = bucket
 		}
 		rl.mutex.Unlock()
 
-		if !bucket.Allow(rl.config.TokensCost) {
+		// Kiểm tra rate limit
+		if !bucket.Allow(tokenCost) {
 			c.Header("Retry-After", time.Second.String())
 			c.JSON(http.StatusTooManyRequests, gin.H{
 				"error":   "Too many requests",
@@ -147,22 +147,18 @@ func (rl *RateLimiter) Middleware() gin.HandlerFunc {
 	}
 }
 
-// Dọn dẹp bucket không dùng
-func (rl *RateLimiter) startCleanup() {
-	ticker := time.NewTicker(rl.config.Cleanup)
-	defer ticker.Stop()
-
-	for range ticker.C {
-		rl.mutex.Lock()
-		for ip, bucket := range rl.buckets {
-			// Sử dụng method đã export
-			elapsed := time.Since(bucket.GetLastRefill())
-
-			// Kiểm tra không hoạt động trong 2 chu kỳ dọn dẹp
-			if elapsed > 2*rl.config.Cleanup {
-				delete(rl.buckets, ip)
+func (rl *RateLimiter) StartCleanup(interval time.Duration) {
+	ticker := time.NewTicker(interval)
+	go func() {
+		for range ticker.C {
+			rl.mutex.Lock()
+			for key, bucket := range rl.buckets {
+				// Sử dụng bucket.LastUsed() đã được triển khai
+				if time.Since(bucket.LastUsed()) > 24*time.Hour {
+					delete(rl.buckets, key)
+				}
 			}
+			rl.mutex.Unlock()
 		}
-		rl.mutex.Unlock()
-	}
+	}()
 }

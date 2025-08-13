@@ -6,45 +6,52 @@ import (
 )
 
 type TokenBucket struct {
+	tokens     float64
 	capacity   float64
 	refillRate float64
-	tokens     float64
 	lastRefill time.Time
-	mutex      sync.Mutex // Không export (viết thường)
+	lastUsed   time.Time // Thêm trường mới
+	mutex      sync.Mutex
 }
 
-func NewTokenBucket(capacity, refillRate float64) *TokenBucket {
+func NewTokenBucket(capacity float64, refillRate float64) *TokenBucket {
 	return &TokenBucket{
+		tokens:     capacity,
 		capacity:   capacity,
 		refillRate: refillRate,
-		tokens:     capacity,
 		lastRefill: time.Now(),
+		lastUsed:   time.Now(), // Khởi tạo
 	}
 }
 
-func (tb *TokenBucket) Allow(tokens float64) bool {
+// Bổ sung phương thức LastUsed
+func (tb *TokenBucket) LastUsed() time.Time {
+	tb.mutex.Lock()
+	defer tb.mutex.Unlock()
+	return tb.lastUsed
+}
+
+func (tb *TokenBucket) Allow(tokensCost float64) bool {
 	tb.mutex.Lock()
 	defer tb.mutex.Unlock()
 
-	now := time.Now()
-	elapsed := now.Sub(tb.lastRefill).Seconds()
-	tb.lastRefill = now
+	// Cập nhật thời gian sử dụng cuối
+	tb.lastUsed = time.Now()
 
-	tb.tokens += elapsed * tb.refillRate
+	// Refill logic
+	now := time.Now()
+	duration := now.Sub(tb.lastRefill)
+	tokensToAdd := tb.refillRate * duration.Seconds()
+	tb.tokens = tb.tokens + tokensToAdd
 	if tb.tokens > tb.capacity {
 		tb.tokens = tb.capacity
 	}
+	tb.lastRefill = now
 
-	if tb.tokens >= tokens {
-		tb.tokens -= tokens
-		return true
+	if tb.tokens < tokensCost {
+		return false
 	}
-	return false
-}
 
-// Thêm method mới
-func (tb *TokenBucket) GetLastRefill() time.Time {
-	tb.mutex.Lock()
-	defer tb.mutex.Unlock()
-	return tb.lastRefill
+	tb.tokens -= tokensCost
+	return true
 }
